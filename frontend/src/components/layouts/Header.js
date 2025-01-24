@@ -1,25 +1,33 @@
 import React from 'react';
-import { AiOutlineBell } from 'react-icons/ai';
-import '../../styles/layouts/header.css'; 
+import { Layout, Avatar, Badge, Typography } from 'antd';
+import { BellOutlined, UserOutlined } from '@ant-design/icons';
 
-function Header({ username, profilePic }) {
+const { Header } = Layout;
+const { Title } = Typography;
+
+function CustomHeader({ username, profilePic }) {
   return (
-    <div className="header">
-      <h1>
-        Bienvenido, <span>{username}</span>
-      </h1>
-      <div className="header-right">
-        <AiOutlineBell className="notification-icon" />
-        <div className="profile">
-          <img
-            src={profilePic}
-            alt="Perfil"
-            className="profile-pic"
-          />
-        </div>
+    <Header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#001529', color: '#fff', padding: '0 20px' }}>
+      <Title level={3} style={{ margin: 0, color: '#fff' }}>
+        Bienvenido, <span style={{ fontWeight: 'bold' }}>{username}</span>
+      </Title>
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        {/* Notification Icon */}
+        <Badge count={5} offset={[0, 5]} style={{ backgroundColor: '#f5222d' }}>
+          <BellOutlined style={{ fontSize: '20px', color: '#fff' }} />
+        </Badge>
+
+        {/* Profile Avatar */}
+        <Avatar
+          src={profilePic || null}
+          icon={!profilePic ? <UserOutlined /> : null}
+          size="large"
+          style={{ border: '2px solid #fff' }}
+        />
       </div>
-    </div>
+    </Header>
   );
 }
 
-export default Header;
+export default CustomHeader;

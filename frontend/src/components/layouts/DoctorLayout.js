@@ -1,46 +1,74 @@
-import React from 'react';
-import Header from './Header';
-import Sidebar from './Sidebar';
-import '../../styles/layouts/DoctorLayout.css';
+import React from "react";
+import { Layout, Avatar } from "antd";
+import Sidebar from "./Sidebar";
+import {
+  DashboardOutlined,
+  UserOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 
-import { AiOutlineDashboard } from 'react-icons/ai';
-import { BiUserCircle } from 'react-icons/bi';
-import { FaBookMedical } from 'react-icons/fa';
+const { Header, Content } = Layout;
 
 function DoctorLayout({ children }) {
+  const doctorLinks = [
+    {
+      label: "Dashboard",
+      to: "/doctor/dashboard",
+      icon: <DashboardOutlined />,
+    },
+    {
+      label: "Pacientes",
+      to: "/doctor/pacientes",
+      icon: <UserOutlined />,
+      subMenu: [
+        { label: "Referidos", to: "/doctor/pacientes/referidoDoctor" },
+      ],
+    },
+    {
+      label: "Historias Clínicas",
+      to: "/doctor/historias",
+      icon: <FileTextOutlined />,
+      subMenu: [
+        { label: "Formulario", to: "/doctor/historias/formulariosDoctor" },
+      ],
+    },
+  ];
+
+  const handleLogout = () => {
+    console.log("Cerrando sesión del doctor...");
+  };
+
   return (
-    <div className="doctor-layout">
-      {/* Columna Izquierda */}
-      <Sidebar
-        links={[
-          { label: 'Dashboard', to: '/doctor/dashboard', icon: <AiOutlineDashboard /> },
-          { 
-            label: 'Pacientes', 
-            to: '/doctor/pacientes', 
-            icon: <BiUserCircle />, 
-            subMenu: [
-              { label: 'Referidos', to: '/doctor/pacientes/referidoDoctor' }, 
-            ],
-          },
-          { 
-            label: 'Historias Clínicas', 
-            to: '/doctor/historias', 
-            icon: <FaBookMedical />,
-            subMenu: [
-              { label: 'Formulario', to: '/doctor/historias/formulariosDoctor' }, 
-            ],
-          }
-        ]}
-      />
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Sidebar con onLogout */}
+      <Sidebar links={doctorLinks} onLogout={handleLogout} />
 
-      <div className="doctor-main">
-        <Header username="Doctor" profilePic="https://via.placeholder.com/40" />
+      {/* Área principal */}
+      <Layout>
+        <Header
+          style={{
+            background: "#001529",
+            padding: "0 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ color: "white" }}>Bienvenido, Doctor</div>
+          <Avatar src="https://via.placeholder.com/40" size="large" />
+        </Header>
 
-        <div className="doctor-content">
+        <Content
+          style={{
+            margin: "16px",
+            padding: "16px",
+            background: "#fff",
+          }}
+        >
           {children}
-        </div>
-      </div>
-    </div>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }
 

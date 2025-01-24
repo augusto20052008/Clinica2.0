@@ -1,45 +1,74 @@
-import React from 'react';
-import Header from './Header';
-import Sidebar from './Sidebar';
-import '../../styles/layouts/EnfermeraLayout.css';
+import React from "react";
+import { Layout, Avatar } from "antd";
+import Sidebar from "./Sidebar";
+import {
+  DashboardOutlined,
+  UserOutlined,
+  FileTextOutlined,
+} from "@ant-design/icons";
 
-import { AiOutlineDashboard } from 'react-icons/ai';
-import { BiUserCircle } from 'react-icons/bi';
-import { FaBookMedical } from 'react-icons/fa';
+const { Header, Content } = Layout;
 
 function EnfermeraLayout({ children }) {
+  const nurseLinks = [
+    {
+      label: "Dashboard",
+      to: "/enfermera/dashboard",
+      icon: <DashboardOutlined />, 
+    },
+    {
+      label: "Pacientes",
+      to: "/enfermera/pacientes",
+      icon: <UserOutlined />, 
+      subMenu: [
+        { label: "Referidos", to: "/enfermera/pacientes/referidoEnfermera" },
+      ],
+    },
+    {
+      label: "Historias Clínicas",
+      to: "/enfermera/historias",
+      icon: <FileTextOutlined />, 
+      subMenu: [
+        { label: "Formulario", to: "/enfermera/historias/formulariosEnfermera" },
+      ],
+    },
+  ];
+
+  const handleLogout = () => {
+    console.log("Cerrando sesión de la enfermera...");
+  };
+
   return (
-    <div className="enfermera-layout">
-      <Sidebar
-        links={[
-          { label: 'Dashboard', to: '/enfermera/dashboard', icon: <AiOutlineDashboard /> },
-          { 
-            label: 'Pacientes', 
-            to: '/enfermera/pacientes', 
-            icon: <BiUserCircle />,
-            subMenu: [
-              { label: 'Referidos', to: '/enfermera/pacientes/referidoEnfermera' }, 
-            ],
-          },
-          { 
-            label: 'Historias Clínicas', 
-            to: '/enfermera/historias', 
-            icon: <FaBookMedical />,
-            subMenu: [
-              { label: 'Formulario', to: '/enfermera/historias/formulariosEnfermera' }, 
-            ], 
-          }
-        ]}
-      />
+    <Layout style={{ minHeight: "100vh" }}>
+      {/* Sidebar con onLogout */}
+      <Sidebar links={nurseLinks} onLogout={handleLogout} />
 
-      <div className="enfermera-main">
-        <Header username="Enfermera" profilePic="https://via.placeholder.com/40" />
+      {/* Área principal */}
+      <Layout>
+        <Header
+          style={{
+            background: "#001529",
+            padding: "0 16px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
+        >
+          <div style={{ color: "white" }}>Bienvenida, Enfermera</div>
+          <Avatar src="https://via.placeholder.com/40" size="large" />
+        </Header>
 
-        <div className="enfermera-content">
+        <Content
+          style={{
+            margin: "16px",
+            padding: "16px",
+            background: "#fff",
+          }}
+        >
           {children}
-        </div>
-      </div>
-    </div>
+        </Content>
+      </Layout>
+    </Layout>
   );
 }
 

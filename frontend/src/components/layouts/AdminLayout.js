@@ -1,16 +1,15 @@
 import React from "react";
-import { Layout, Menu, Avatar } from "antd";
+import { Layout, Avatar } from "antd";
+import Sidebar from "./Sidebar"; // Asegúrate de que esta sea la ruta correcta
 import {
   DashboardOutlined,
   UserOutlined,
   TeamOutlined,
   ToolOutlined,
   BookOutlined,
-  FormOutlined,
 } from "@ant-design/icons";
 
-const { Header, Sider, Content } = Layout;
-const { SubMenu } = Menu;
+const { Header, Content } = Layout;
 
 function AdminLayout({ children }) {
   const adminLinks = [
@@ -52,54 +51,38 @@ function AdminLayout({ children }) {
     },
   ];
 
+  const handleLogout = () => {
+    // Aquí puedes agregar la lógica para cerrar sesión, como redirigir o limpiar tokens
+    console.log("Cerrando sesión...");
+  };
+
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* Sidebar */}
-      <Sider collapsible>
-        <div className="logo" style={{ padding: "16px", textAlign: "center", color: "white" }}>
-          <h1 style={{ color: "white", fontSize: "18px" }}>Clínica San José</h1>
-        </div>
-        <Menu theme="dark" mode="inline">
-          {adminLinks.map((link) =>
-            link.subMenu ? (
-              <SubMenu
-                key={link.label}
-                icon={link.icon}
-                title={link.label}
-              >
-                {link.subMenu.map((subLink) => (
-                  <Menu.Item key={subLink.to}>
-                    <a href={subLink.to}>{subLink.label}</a>
-                  </Menu.Item>
-                ))}
-              </SubMenu>
-            ) : (
-              <Menu.Item key={link.to} icon={link.icon}>
-                <a href={link.to}>{link.label}</a>
-              </Menu.Item>
-            )
-          )}
-        </Menu>
-      </Sider>
+      {/* Sidebar con onLogout */}
+      <Sidebar links={adminLinks} onLogout={handleLogout} />
 
-      {/* Main Content */}
+      {/* Área principal */}
       <Layout>
-        {/* Header */}
         <Header
           style={{
-            background: "#fff",
+            background: "#001529",
             padding: "0 16px",
             display: "flex",
             alignItems: "center",
             justifyContent: "space-between",
           }}
         >
-          <div>Bienvenido, Administrador</div>
-          <Avatar src="https://via.placeholder.com/40" />
+          <div style={{ color: "white" }}>Bienvenido, Administrador</div>
+          <Avatar src="https://via.placeholder.com/40" size="large" />
         </Header>
 
-        {/* Main Content */}
-        <Content style={{ margin: "16px", padding: "16px", background: "#fff" }}>
+        <Content
+          style={{
+            margin: "16px",
+            padding: "16px",
+            background: "#fff",
+          }}
+        >
           {children}
         </Content>
       </Layout>

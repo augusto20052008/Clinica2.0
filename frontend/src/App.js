@@ -17,7 +17,7 @@ import Dashboard from "./modules/Admin/Dashboard";
 import Users from "./modules/Admin/Users/Users";
 import Patients from "./modules/Admin/Patients/Patients";
 import PatientProfilePage from "./modules/Admin/Patients/PatientProfilePage";
-import Referido from "./modules/Admin/Patients/Referido/Referido"
+import Referido from "./modules/Admin/Patients/Referido/Referido";
 import ChangeRequest from "./modules/Admin/ChangeRequest";
 import HistoriaClinica from "./modules/Admin/HistoriaClinica/HistoriaClinica/HistoriaClinica";
 import Establecimiento from "./modules/Admin/HistoriaClinica/SubMenuHistoriaClinica/Establecimiento/Establecimiento";
@@ -41,7 +41,6 @@ import ReferidoEnfermera from "./modules/Enfermera/PacientesEnfermera/Referido/R
 import HistoriasEnfermera from "./modules/Enfermera/HistoriaClinica/HistoriasEnfermera";
 import FormulariosEnfermera from "./modules/Enfermera/HistoriaClinica/Formulario/FormularioEnfermera";
 
-
 function App() {
   const navigate = useNavigate();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -58,14 +57,12 @@ function App() {
     } else {
       setIsAuthenticated(true);
 
-      // Configuración de enlaces en el sidebar según el rol
       const roleLinks = {
         Admin: [
-          { to: "/admin/dashboard", label: "Dashboard", icon: <i className="fas fa-tachometer-alt"></i> },
+          { to: "/admin/dashboard", label: "Dashboard" },
           {
             to: "/admin/users",
             label: "Usuarios",
-            icon: <i className="fas fa-users"></i>,
             subMenu: [
               { to: "/admin/users/firma-electronica", label: "Firma Electrónica" },
               { to: "/admin/users/jornada", label: "Jornada" },
@@ -75,16 +72,14 @@ function App() {
           {
             to: "/admin/patients",
             label: "Pacientes",
-            icon: <i className="fas fa-user-injured"></i>,
             subMenu: [
-              { to: "/admin/patients/referido", label: "Referidos" }, 
+              { to: "/admin/patients/referido", label: "Referidos" },
             ],
           },
-          { to: "/admin/change", label: "Solicitudes de Cambio", icon: <i className="fas fa-exchange-alt"></i> },
+          { to: "/admin/change", label: "Solicitudes de Cambio" },
           {
             to: "/admin/historia-clinica",
             label: "Historia Clínica",
-            icon: <i className="fas fa-book-medical"></i>,
             subMenu: [
               { to: "/admin/historia-clinica/establecimiento", label: "Establecimiento" },
               { to: "/admin/historia-clinica/plantillas", label: "Plantillas" },
@@ -93,41 +88,37 @@ function App() {
           },
         ],
         Doctor: [
-          { to: "/doctor/dashboard", label: "Dashboard", icon: <i className="fas fa-tachometer-alt"></i> },
-          { 
-            to: "/doctor/pacientes", 
-            label: "Pacientes", 
-            icon: <i className="fas fa-user-injured"></i>, 
+          { to: "/doctor/dashboard", label: "Dashboard" },
+          {
+            to: "/doctor/pacientes",
+            label: "Pacientes",
             subMenu: [
-              { to: "/doctor/pacientes/referidoDoctor", label: "Referidos" }, 
+              { to: "/doctor/pacientes/referidoDoctor", label: "Referidos" },
             ],
           },
-          { 
-            to: "/doctor/historias", 
-            label: "Historias Clínicas", 
-            icon: <i className="fas fa-notes-medical"></i>, 
+          {
+            to: "/doctor/historias",
+            label: "Historias Clínicas",
             subMenu: [
-              { to: "/pacientes/historias/formulariosDoctor", label: "Formularios" },
+              { to: "/doctor/historias/formulariosDoctor", label: "Formularios" },
             ],
           },
         ],
         Enfermera: [
-          { to: "/enfermera/dashboard", label: "Dashboard", icon: <i className="fas fa-tachometer-alt"></i> },
-          { 
-            to: "/enfermera/paciente", 
-            label: "Pacientes", 
-            icon: <i className="fas fa-user-injured"></i>,
+          { to: "/enfermera/dashboard", label: "Dashboard" },
+          {
+            to: "/enfermera/paciente",
+            label: "Pacientes",
             subMenu: [
-              { to: "/enfermera/paciente/referidoEnfermera", label: "Referidos" }, 
-            ], 
+              { to: "/enfermera/paciente/referidoEnfermera", label: "Referidos" },
+            ],
           },
-          { 
-            to: "/enfermera/historias", 
-            label: "Historias Clínicas", 
-            icon: <i className="fas fa-notes-medical"></i>,
+          {
+            to: "/enfermera/historias",
+            label: "Historias Clínicas",
             subMenu: [
               { to: "/enfermera/historias/formularioEnfermera", label: "Formularios" },
-            ], 
+            ],
           },
         ],
       };
@@ -144,10 +135,8 @@ function App() {
 
   return (
     <Routes>
-      {/* Ruta para el login */}
       <Route path="/" element={<Login />} />
 
-      {/* Rutas autenticadas */}
       {isAuthenticated && (
         <Route
           path="/*"
@@ -160,42 +149,33 @@ function App() {
         />
       )}
 
-      {/* Rutas del Administrador */}
       <Route path="/admin/dashboard" element={<AdminLayout><Dashboard /></AdminLayout>} />
       <Route path="/admin/users" element={<AdminLayout><Users /></AdminLayout>} />
       <Route path="/admin/users/firma-electronica" element={<AdminLayout><FirmaElectronica /></AdminLayout>} />
       <Route path="/admin/users/jornada" element={<AdminLayout><Jornada /></AdminLayout>} />
       <Route path="/admin/users/titulo" element={<AdminLayout><Titulo /></AdminLayout>} />
       <Route path="/admin/patients" element={<AdminLayout><Patients /></AdminLayout>} />
-      <Route path="/admin/patients/referido" element={<AdminLayout><Referido /></AdminLayout>}/>
-
+      <Route path="/admin/patients/referido" element={<AdminLayout><Referido /></AdminLayout>} />
       <Route path="/admin/change" element={<AdminLayout><ChangeRequest /></AdminLayout>} />
       <Route path="/admin/historia-clinica" element={<AdminLayout><HistoriaClinica /></AdminLayout>} />
       <Route path="/admin/historia-clinica/establecimiento" element={<AdminLayout><Establecimiento /></AdminLayout>} />
       <Route path="/admin/historia-clinica/plantillas" element={<AdminLayout><Plantillas /></AdminLayout>} />
-      <Route path="/admin/historia-clinica/Formularios" element={<AdminLayout><Formularios /></AdminLayout>} />
+      <Route path="/admin/historia-clinica/formularios" element={<AdminLayout><Formularios /></AdminLayout>} />
 
-      <Route
-        path="/admin/patients/:identificacion"
-        element={<PatientProfilePage />}
-      />
+      <Route path="/admin/patients/:identificacion" element={<PatientProfilePage />} />
 
-
-      {/* Rutas del Doctor */}
       <Route path="/doctor/dashboard" element={<DoctorLayout><DashboardDoctor /></DoctorLayout>} />
       <Route path="/doctor/pacientes" element={<DoctorLayout><PacientesDoctor /></DoctorLayout>} />
       <Route path="/doctor/pacientes/referidoDoctor" element={<DoctorLayout><ReferidoDoctor /></DoctorLayout>} />
       <Route path="/doctor/historias" element={<DoctorLayout><HistoriasDoctor /></DoctorLayout>} />
       <Route path="/doctor/historias/formulariosDoctor" element={<DoctorLayout><FormulariosDoctor /></DoctorLayout>} />
 
-      {/* Rutas de la Enfermera */}
       <Route path="/enfermera/dashboard" element={<EnfermeraLayout><DashboardEnfermera /></EnfermeraLayout>} />
       <Route path="/enfermera/pacientes" element={<EnfermeraLayout><PacientesEnfermera /></EnfermeraLayout>} />
       <Route path="/enfermera/pacientes/referidoEnfermera" element={<EnfermeraLayout><ReferidoEnfermera /></EnfermeraLayout>} />
       <Route path="/enfermera/historias" element={<EnfermeraLayout><HistoriasEnfermera /></EnfermeraLayout>} />
-      <Route path="/enfermera/historias/formulariosEnfermera" element={<EnfermeraLayout><FormulariosEnfermera /></EnfermeraLayout>} />
+      <Route path="/enfermera/historias/formularioEnfermera" element={<EnfermeraLayout><FormulariosEnfermera /></EnfermeraLayout>} />
 
-      {/* 404 si la ruta no existe */}
       <Route path="*" element={<h1>404 - Página no encontrada</h1>} />
     </Routes>
   );
