@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import Button from "../../../../../components/common/Button";
-import { createEstablecimiento } from "../../../../../utils/api"; 
+import { Form, Input, Button, Row, Col, Typography } from "antd";
+import { SaveOutlined, CloseOutlined } from "@ant-design/icons";
+import { createEstablecimiento } from "../../../../../utils/api";
+
+const { Title } = Typography;
 
 function AddEstablecimiento({ onClose, onRefresh }) {
   const [formData, setFormData] = useState({
@@ -17,10 +20,9 @@ function AddEstablecimiento({ onClose, onRefresh }) {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values) => {
     try {
-      await createEstablecimiento(formData);
+      await createEstablecimiento(values);
       alert("Establecimiento creado exitosamente");
       onRefresh();
       onClose();
@@ -32,75 +34,95 @@ function AddEstablecimiento({ onClose, onRefresh }) {
 
   return (
     <div className="add-establecimiento-container">
-      <h2>Agregar Nuevo Establecimiento</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="nombreEstablecimiento">Nombre:</label>
-          <input
-            type="text"
-            name="nombreEstablecimiento"
-            id="nombreEstablecimiento"
-            value={formData.nombreEstablecimiento}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoEstablecimiento">Código:</label>
-          <input
-            type="text"
-            name="codigoEstablecimiento"
-            id="codigoEstablecimiento"
-            value={formData.codigoEstablecimiento}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="institucionSistema">Sistema Institucional:</label>
-          <input
-            type="text"
-            name="institucionSistema"
-            id="institucionSistema"
-            value={formData.institucionSistema}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoParroquiaUO">Código Parroquia:</label>
-          <input
-            type="text"
-            name="codigoParroquiaUO"
-            id="codigoParroquiaUO"
-            value={formData.codigoParroquiaUO}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoCantonUO">Código Cantón:</label>
-          <input
-            type="text"
-            name="codigoCantonUO"
-            id="codigoCantonUO"
-            value={formData.codigoCantonUO}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoProvinciaUO">Código Provincia:</label>
-          <input
-            type="text"
-            name="codigoProvinciaUO"
-            id="codigoProvinciaUO"
-            value={formData.codigoProvinciaUO}
-            onChange={handleChange}
-          />
-        </div>
-        <div className="form-buttons">
-          <Button type="submit" label="Guardar" />
-          <Button type="button" label="Cancelar" onClick={onClose} />
-        </div>
-      </form>
+      <Form
+        layout="vertical"
+        onFinish={handleSubmit}
+        initialValues={formData}
+        onValuesChange={(_, values) => setFormData(values)}
+      >
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item
+              label="Nombre:"
+              name="nombreEstablecimiento"
+              rules={[{ required: true, message: "Por favor ingrese el nombre" }]}
+            >
+              <Input
+                prefix={<SaveOutlined />}
+                placeholder="Nombre del establecimiento"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item
+              label="Código:"
+              name="codigoEstablecimiento"
+              rules={[{ required: true, message: "Por favor ingrese el código" }]}
+            >
+              <Input
+                prefix={<SaveOutlined />}
+                placeholder="Código del establecimiento"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Sistema Institucional:" name="institucionSistema">
+              <Input
+                prefix={<SaveOutlined />}
+                placeholder="Sistema institucional"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item label="Código Parroquia:" name="codigoParroquiaUO">
+              <Input
+                prefix={<SaveOutlined />}
+                placeholder="Código parroquia"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Row gutter={16}>
+          <Col span={12}>
+            <Form.Item label="Código Cantón:" name="codigoCantonUO">
+              <Input
+                prefix={<SaveOutlined />}
+                placeholder="Código cantón"
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item label="Código Provincia:" name="codigoProvinciaUO">
+              <Input
+                prefix={<SaveOutlined />}
+                placeholder="Código provincia"
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            icon={<SaveOutlined />}
+            style={{ marginRight: 8 }}
+          >
+            Guardar
+          </Button>
+          <Button
+            type="default"
+            onClick={onClose}
+            icon={<CloseOutlined />}
+          >
+            Cancelar
+          </Button>
+        </Form.Item>
+      </Form>
     </div>
   );
 }

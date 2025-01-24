@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import Button from "../../../../../components/common/Button";
+import { Input, Form, Button, Modal, notification } from "antd";
+import { SaveOutlined, CloseOutlined } from "@ant-design/icons";
 import { updateEstablecimiento } from "../../../../../utils/api"; // Asegúrate de definir esta función en api.js
 
 function EditEstablecimiento({ onClose, onRefresh, establecimiento }) {
@@ -21,86 +22,91 @@ function EditEstablecimiento({ onClose, onRefresh, establecimiento }) {
     e.preventDefault();
     try {
       await updateEstablecimiento(establecimiento.idEstablecimiento, formData);
-      alert("Establecimiento actualizado exitosamente");
+      notification.success({
+        message: "Éxito",
+        description: "Establecimiento actualizado exitosamente",
+      });
       onRefresh();
       onClose();
     } catch (error) {
       console.error("Error al actualizar el establecimiento:", error);
-      alert("Error al actualizar el establecimiento");
+      notification.error({
+        message: "Error",
+        description: "Error al actualizar el establecimiento",
+      });
     }
   };
 
   return (
     <div className="edit-establecimiento-container">
       <h2>Editar Establecimiento</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="nombreEstablecimiento">Nombre:</label>
-          <input
+      <Form onSubmit={handleSubmit}>
+        <Form.Item label="Nombre" required>
+          <Input
             type="text"
             name="nombreEstablecimiento"
-            id="nombreEstablecimiento"
             value={formData.nombreEstablecimiento}
             onChange={handleChange}
-            required
           />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoEstablecimiento">Código:</label>
-          <input
+        </Form.Item>
+        <Form.Item label="Código" required>
+          <Input
             type="text"
             name="codigoEstablecimiento"
-            id="codigoEstablecimiento"
             value={formData.codigoEstablecimiento}
             onChange={handleChange}
-            required
           />
-        </div>
-        <div className="form-group">
-          <label htmlFor="institucionSistema">Sistema Institucional:</label>
-          <input
+        </Form.Item>
+        <Form.Item label="Sistema Institucional">
+          <Input
             type="text"
             name="institucionSistema"
-            id="institucionSistema"
             value={formData.institucionSistema}
             onChange={handleChange}
           />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoParroquiaUO">Código Parroquia:</label>
-          <input
+        </Form.Item>
+        <Form.Item label="Código Parroquia">
+          <Input
             type="text"
             name="codigoParroquiaUO"
-            id="codigoParroquiaUO"
             value={formData.codigoParroquiaUO}
             onChange={handleChange}
           />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoCantonUO">Código Cantón:</label>
-          <input
+        </Form.Item>
+        <Form.Item label="Código Cantón">
+          <Input
             type="text"
             name="codigoCantonUO"
-            id="codigoCantonUO"
             value={formData.codigoCantonUO}
             onChange={handleChange}
           />
-        </div>
-        <div className="form-group">
-          <label htmlFor="codigoProvinciaUO">Código Provincia:</label>
-          <input
+        </Form.Item>
+        <Form.Item label="Código Provincia">
+          <Input
             type="text"
             name="codigoProvinciaUO"
-            id="codigoProvinciaUO"
             value={formData.codigoProvinciaUO}
             onChange={handleChange}
           />
-        </div>
+        </Form.Item>
         <div className="form-buttons">
-          <Button type="submit" label="Guardar" />
-          <Button type="button" label="Cancelar" onClick={onClose} />
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
+            onClick={handleSubmit}
+          >
+            Guardar
+          </Button>
+          <Button
+            type="default"
+            icon={<CloseOutlined />}
+            onClick={onClose}
+            style={{ marginLeft: "10px" }}
+          >
+            Cancelar
+          </Button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }
