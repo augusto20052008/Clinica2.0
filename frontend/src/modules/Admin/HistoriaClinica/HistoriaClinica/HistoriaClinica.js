@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import Table from "../../../../components/common/Table";
-import Button from "../../../../components/common/Button";
-import SearchBar from "../../../../components/common/SearchBar";
+import { Table, Button, Input, Modal, notification } from "antd";
+import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
 import AddHistoriaClinica from "./AddHistoriaClinica";
 import EditHistoriaClinica from "./EditHistoriaClinica";
 import HistoriaClinicaProfile from "./HistoriaClinicaProfile";
-import Modal from "../../../../components/common/Modal";
 import { fetchHistorias, deleteHistoria } from "../../../../utils/api";
-import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+
+const { Search } = Input;
 
 function HistoriaClinica() {
   const [historias, setHistorias] = useState([]);
@@ -40,23 +39,24 @@ function HistoriaClinica() {
   };
 
   const handleDelete = async (idHistoriaClinica, pacienteIdentificacion) => {
-    console.log("Intentando eliminar historia con ID:", idHistoriaClinica, "y paciente:", pacienteIdentificacion);
-
     const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar esta historia clínica?");
     if (!confirmDelete) return;
 
     try {
       await deleteHistoria(idHistoriaClinica, pacienteIdentificacion);
-      alert("Historia clínica eliminada exitosamente");
+      notification.success({
+        message: "Éxito",
+        description: "Historia clínica eliminada exitosamente.",
+      });
       loadHistorias();
     } catch (error) {
       console.error("Error al eliminar historia clínica:", error);
-      alert(
-        error.message || "Error al eliminar historia clínica."
-      );
+      notification.error({
+        message: "Error",
+        description: error.message || "Error al eliminar historia clínica.",
+      });
     }
   };
-
 
   const handleEdit = (historia) => {
     setCurrentHistoria(historia);
@@ -69,20 +69,32 @@ function HistoriaClinica() {
   };
 
   const columns = [
-    { label: "Numero Historia Clinica", accessor: "nroHistoriaClinica" },
-    { label: "Paciente Identificación", accessor: "Paciente_identificacion" },
-    { label: "Fecha de Creación", accessor: "fechaCreacionHC" },
-    { label: "Ultima Edición", accessor: "fechaUltimaEdicion" },
+    { title: "Número Historia Clínica", dataIndex: "nroHistoriaClinica", key: "nroHistoriaClinica" },
+    { title: "Paciente Identificación", dataIndex: "Paciente_identificacion", key: "Paciente_identificacion" },
+    { title: "Fecha de Creación", dataIndex: "fechaCreacionHC", key: "fechaCreacionHC" },
+    { title: "Última Edición", dataIndex: "fechaUltimaEdicion", key: "fechaUltimaEdicion" },
     {
-      label: "Acciones",
-      accessor: "acciones",
-      render: (row) => (
+      title: "Acciones",
+      key: "acciones",
+      render: (text, record) => (
         <div style={{ display: "flex", gap: "10px" }}>
-          <FaEye onClick={() => handleView(row)} style={{ cursor: "pointer", color: "#007bff" }} />
-          <FaEdit onClick={() => handleEdit(row)} style={{ cursor: "pointer", color: "#ffc107" }} />
-          <FaTrash
-            onClick={() => handleDelete(row.idHistoriaClinica, row.Paciente_identificacion)}
-            style={{ cursor: "pointer", color: "#dc3545" }}
+          <Button
+            icon={<FaEye />}
+            onClick={() => handleView(record)}
+            type="link"
+            style={{ color: "#1890ff" }}
+          />
+          <Button
+            icon={<FaEdit />}
+            onClick={() => handleEdit(record)}
+            type="link"
+            style={{ color: "#ffc107" }}
+          />
+          <Button
+            icon={<FaTrash />}
+            onClick={() => handleDelete(record.idHistoriaClinica, record.Paciente_identificacion)}
+            type="link"
+            style={{ color: "#dc3545" }}
           />
         </div>
       ),
@@ -91,24 +103,41 @@ function HistoriaClinica() {
 
   return (
     <div>
-      <div className="actions-row">
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
         <h2>Gestión de Historias Clínicas</h2>
-        <SearchBar
-          placeholder="Buscar por identificación del paciente"
-          value={searchQuery}
-          onChange={setSearchQuery}
-        />
-        <Button label="Agregar Historia Clínica" onClick={() => setAddModalOpen(true)} />
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Search
+            placeholder="Buscar por identificación del paciente"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: 300 }}
+          />
+          <Button type="primary" onClick={() => setAddModalOpen(true)}>
+            Agregar Historia Clínica
+          </Button>
+        </div>
       </div>
 
-      <Table columns={columns} data={filteredHistorias} />
+      <Table columns={columns} dataSource={filteredHistorias} rowKey="idHistoriaClinica" />
+
       {isAddModalOpen && (
-        <Modal onClose={() => setAddModalOpen(false)}>
+        <Modal
+          title="Agregar Historia Clínica"
+          visible={isAddModalOpen}
+          onCancel={() => setAddModalOpen(false)}
+          footer={null}
+        >
           <AddHistoriaClinica onClose={() => setAddModalOpen(false)} onRefresh={loadHistorias} />
         </Modal>
       )}
+
       {isEditModalOpen && currentHistoria && (
-        <Modal onClose={() => setEditModalOpen(false)}>
+        <Modal
+          title="Editar Historia Clínica"
+          visible={isEditModalOpen}
+          onCancel={() => setEditModalOpen(false)}
+          footer={null}
+        >
           <EditHistoriaClinica
             historia={currentHistoria}
             onClose={() => setEditModalOpen(false)}
@@ -116,6 +145,7 @@ function HistoriaClinica() {
           />
         </Modal>
       )}
+
       {isViewModalOpen && currentHistoria && (
         <HistoriaClinicaProfile
           idHistoriaClinica={currentHistoria.idHistoriaClinica}
