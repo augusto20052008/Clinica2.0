@@ -4,8 +4,10 @@ import { FaUser, FaPhone, FaBirthdayCake, FaMapMarkerAlt, FaGlobe, FaVenusMars, 
 import { fetchHistoriaById, fetchPatientDetails } from "../../../utils/api";
 import HistoriasClinicasTable from "./HistoriaClinicaTable";
 import FormulariosTable from "./FormularioTable";
-import "../../../styles/modules/Administrador/patientProfilePage.css";
-import BackButton from "../../../components/common/BackButton";
+import { Button, Col, Row, Typography, Card, Spin, Empty, Divider, Space, Avatar } from "antd";
+import { ArrowLeftOutlined } from "@ant-design/icons";
+
+const { Text } = Typography;
 
 const PatientProfilePage = () => {
   const { identificacion } = useParams();
@@ -46,84 +48,84 @@ const PatientProfilePage = () => {
   }, [identificacion]);
 
   if (loading) {
-    return <p>Cargando...</p>;
+    return (
+      <div style={{ textAlign: "center", padding: "20px" }}>
+        <Spin tip="Cargando..." />
+      </div>
+    );
   }
 
   if (error) {
-    return <p>{error}</p>;
+    return <Text>{error}</Text>;
   }
 
   if (!patientData || !historiaData) {
-    return <p>No se encontró información del paciente.</p>;
+    return <Empty description="No se encontró información del paciente" />;
   }
 
   return (
-    <div className="patient-profile-page">
-      <div className="patient-sidebar">
-        <BackButton to="/admin/patients" />
-        <div className="patient-header">
-          <div className="patient-avatar-container">
-            <img
+    <Row gutter={[16, 16]}>
+      {/* Sidebar del paciente */}
+      <Col xs={24} sm={24} md={6} lg={6}>
+        <Card
+          bordered
+          style={{ width: "100%", height: "100%" }} // Asegura que ocupe toda la altura disponible
+        >
+          <Button
+            type="link"
+            icon={<ArrowLeftOutlined />}
+            href="/admin/patients"
+            style={{ marginBottom: "16px" }}
+          >
+            Volver
+          </Button>
+          <div style={{ textAlign: "center", marginBottom: "20px" }}>
+            <Avatar
+              size={120}
               src="https://via.placeholder.com/150/cccccc/000000?text=Foto"
               alt={`${patientData.primerNombre} ${patientData.apellidoParteno}`}
-              className="patient-avatar"
             />
           </div>
-          <h2 className="patient-name">{`${patientData.primerNombre} ${patientData.apellidoParteno || ""
-            }`}</h2>
-          <p className="patient-role">Paciente</p>
-        </div>
-        <div className="patient-info">
-          <p>
-            <FaUser className="icon" /> <strong>Identificación:</strong>{" "}
-            {patientData.identificacion}
-          </p>
-          <p>
-            <FaPhone className="icon" /> <strong>Teléfono:</strong>{" "}
-            {patientData.telefonoPaciente || "No especificado"}
-          </p>
-          <p>
-            <FaBirthdayCake className="icon" />{" "}
-            <strong>Fecha de Nacimiento:</strong>{" "}
-            {patientData.fechaNacimiento
-              ? new Date(patientData.fechaNacimiento).toLocaleDateString()
-              : "No especificada"}
-          </p>
-          <p>
-            <FaMapMarkerAlt className="icon" /> <strong>Provincia:</strong>{" "}
-            {patientData.provincia || "No especificada"}
-          </p>
-          <p>
-            <FaGlobe className="icon" /> <strong>Nacionalidad:</strong>{" "}
-            {patientData.nacionalidad || "No especificada"}
-          </p>
-          <p>
-            <FaVenusMars className="icon" /> <strong>Sexo:</strong>{" "}
-            {patientData.sexo === "M" ? "Masculino" : "Femenino"}
-          </p>
-          <p>
-            <FaAllergies className="icon" /> <strong>Alergias:</strong>{" "}
-            {patientData.alergias || "No especificadas"}
-          </p>
-          <p>
-            <FaTint className="icon" /> <strong>Grupo Sanguíneo:</strong>{" "}
-            {patientData.grupoSanguineo || "No especificado"}
-          </p>
-        </div>
-      </div>
-      <div>
-        <div className="patient-content">
-          <HistoriasClinicasTable
-            pacienteIdentificacion={patientData.identificacion}
-          />
-        </div>
+          <Text
+            style={{
+              display: "block",
+              textAlign: "center",
+              fontSize: "18px",
+              fontWeight: "bold",
+            }}
+          >
+            {`${patientData.primerNombre} ${patientData.apellidoParteno || ""}`}
+          </Text>
+          <Text style={{ display: "block", textAlign: "center" }} type="secondary">
+            Paciente
+          </Text>
+          <Divider />
+          <div>
+            <Space direction="vertical" style={{ width: "100%" }}>
+              <Text><FaUser style={{ marginRight: 8 }} /> <strong>Identificación:</strong> {patientData.identificacion}</Text>
+              <Text><FaPhone style={{ marginRight: 8 }} /> <strong>Teléfono:</strong> {patientData.telefonoPaciente || "No especificado"}</Text>
+              <Text><FaBirthdayCake style={{ marginRight: 8 }} /> <strong>Fecha de Nacimiento:</strong> {patientData.fechaNacimiento ? new Date(patientData.fechaNacimiento).toLocaleDateString() : "No especificada"}</Text>
+              <Text><FaMapMarkerAlt style={{ marginRight: 8 }} /> <strong>Provincia:</strong> {patientData.provincia || "No especificada"}</Text>
+              <Text><FaGlobe style={{ marginRight: 8 }} /> <strong>Nacionalidad:</strong> {patientData.nacionalidad || "No especificada"}</Text>
+              <Text><FaVenusMars style={{ marginRight: 8 }} /> <strong>Sexo:</strong> {patientData.sexo === "M" ? "Masculino" : "Femenino"}</Text>
+              <Text><FaAllergies style={{ marginRight: 8 }} /> <strong>Alergias:</strong> {patientData.alergias || "No especificadas"}</Text>
+              <Text><FaTint style={{ marginRight: 8 }} /> <strong>Grupo Sanguíneo:</strong> {patientData.grupoSanguineo || "No especificado"}</Text>
+            </Space>
+          </div>
+        </Card>
+      </Col>
 
-        <div className="patient-content">
+      {/* Contenido de la historia clínica y formularios */}
+      <Col xs={24} sm={24} md={18} lg={18}>
+        <Card bordered>
+          <HistoriasClinicasTable pacienteIdentificacion={patientData.identificacion} />
+        </Card>
+
+        <Card bordered style={{ marginTop: "20px" }}>
           <FormulariosTable idHistoriaClinica={historiaData[0].idHistoriaClinica} />
-        </div>
-      </div>
-
-    </div>
+        </Card>
+      </Col>
+    </Row>
   );
 };
 

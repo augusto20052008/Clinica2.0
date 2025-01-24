@@ -1,190 +1,142 @@
 import React, { useState, useEffect } from "react";
-import Modal from "../../../components/common/Modal";
-import Button from "../../../components/common/Button";
+import { Modal, Button, Form, Input, Select, DatePicker, Tabs } from "antd";
+import { UserOutlined, MailOutlined, PhoneOutlined } from "@ant-design/icons";
+import moment from "moment";
+
+const { TabPane } = Tabs;
+const { TextArea } = Input;
 
 const EditPatientForm = ({ onClose, onUpdate, initialData }) => {
-  const [formData, setFormData] = useState({
-    identificacion: "",
-    primerNombre: "",
-    apellidoParteno: "",
-    apellidoMaterno: "",
-    telefonoPaciente: "",
-    correo: "",
-    sexo: "",
-    estadoCivil: "",
-    fechaNacimiento: "",
-    nacionalidad: "",
-    grupoCultural: "",
-    tipoSeguroSalud: "",
-    grupoSanguineo: "",
-    alergias: "",
-    observaciones: "",
-  });
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    console.log("Datos iniciales recibidos en EditPatientForm:", initialData);
     if (initialData && Object.keys(initialData).length > 0) {
-      setFormData({ ...initialData });
+      setFormData({
+        ...initialData,
+        fechaNacimiento: initialData.fechaNacimiento
+          ? moment(initialData.fechaNacimiento)
+          : null,
+      });
     }
   }, [initialData]);
-  
-  
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
+  const handleInputChange = (name, value) => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onUpdate(formData);
+  const handleSubmit = () => {
+    const formattedData = {
+      ...formData,
+      fechaNacimiento: formData.fechaNacimiento
+        ? moment(formData.fechaNacimiento).format("YYYY-MM-DD")
+        : null,
+    };
+    onUpdate(formattedData);
   };
 
   return (
-    <Modal onClose={onClose}>
-      <h2>Editar Paciente</h2>
-      <form className="form-grid" onSubmit={handleSubmit}>
-        <div className="form-field">
-          <label>Identificación</label>
-          <input
-            type="text"
-            name="identificacion"
-            value={formData.identificacion}
-            disabled // No se permite editar este campo
-          />
-        </div>
-        <div className="form-field">
-          <label>Primer Nombre</label>
-          <input
-            type="text"
-            name="primerNombre"
-            value={formData.primerNombre}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Apellido Paterno</label>
-          <input
-            type="text"
-            name="apellidoParteno"
-            value={formData.apellidoParteno}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Apellido Materno</label>
-          <input
-            type="text"
-            name="apellidoMaterno"
-            value={formData.apellidoMaterno}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Teléfono</label>
-          <input
-            type="text"
-            name="telefonoPaciente"
-            value={formData.telefonoPaciente}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Correo</label>
-          <input
-            type="email"
-            name="correo"
-            value={formData.correo}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Sexo</label>
-          <select
-            name="sexo"
-            value={formData.sexo}
-            onChange={handleInputChange}
-          >
-            <option value="M">Masculino</option>
-            <option value="F">Femenino</option>
-          </select>
-        </div>
-        <div className="form-field">
-          <label>Estado Civil</label>
-          <select
-            name="estadoCivil"
-            value={formData.estadoCivil}
-            onChange={handleInputChange}
-          >
-            <option value="Sol">Soltero</option>
-            <option value="Cas">Casado</option>
-            <option value="Div">Divorciado</option>
-            <option value="Viudo">Viudo</option>
-          </select>
-        </div>
-        <div className="form-field">
-          <label>Fecha de Nacimiento</label>
-          <input
-            type="date"
-            name="fechaNacimiento"
-            value={formData.fechaNacimiento}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Nacionalidad</label>
-          <input
-            type="text"
-            name="nacionalidad"
-            value={formData.nacionalidad}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Grupo Cultural</label>
-          <input
-            type="text"
-            name="grupoCultural"
-            value={formData.grupoCultural}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Tipo de Seguro de Salud</label>
-          <input
-            type="text"
-            name="tipoSeguroSalud"
-            value={formData.tipoSeguroSalud}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Grupo Sanguíneo</label>
-          <input
-            type="text"
-            name="grupoSanguineo"
-            value={formData.grupoSanguineo}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Alergias</label>
-          <textarea
-            name="alergias"
-            value={formData.alergias}
-            onChange={handleInputChange}
-          />
-        </div>
-        <div className="form-field">
-          <label>Observaciones</label>
-          <textarea
-            name="observaciones"
-            value={formData.observaciones}
-            onChange={handleInputChange}
-          />
-        </div>
-        <Button type="submit" label="Guardar Cambios" className="primary" />
-      </form>
+    <Modal
+      title="Editar Paciente"
+      visible
+      onCancel={onClose}
+      onOk={handleSubmit}
+      okText="Guardar Cambios"
+      cancelText="Cancelar"
+      width={700}
+    >
+      <Tabs defaultActiveKey="1">
+        <TabPane tab="Información Personal" key="1">
+          <Form layout="vertical">
+            <Form.Item label="Identificación">
+              <Input
+                prefix={<UserOutlined />}
+                value={formData.identificacion}
+                disabled
+              />
+            </Form.Item>
+            <Form.Item label="Primer Nombre">
+              <Input
+                name="primerNombre"
+                value={formData.primerNombre}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+            <Form.Item label="Apellido Paterno">
+              <Input
+                name="apellidoParteno"
+                value={formData.apellidoParteno}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+            <Form.Item label="Apellido Materno">
+              <Input
+                name="apellidoMaterno"
+                value={formData.apellidoMaterno}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+          </Form>
+        </TabPane>
+
+        <TabPane tab="Contacto" key="2">
+          <Form layout="vertical">
+            <Form.Item label="Teléfono">
+              <Input
+                prefix={<PhoneOutlined />}
+                name="telefonoPaciente"
+                value={formData.telefonoPaciente}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+            <Form.Item label="Correo">
+              <Input
+                prefix={<MailOutlined />}
+                name="correo"
+                value={formData.correo}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+          </Form>
+        </TabPane>
+
+        <TabPane tab="Detalles Médicos" key="3">
+          <Form layout="vertical">
+            <Form.Item label="Sexo">
+              <Select
+                name="sexo"
+                value={formData.sexo}
+                onChange={(value) => handleInputChange("sexo", value)}
+              >
+                <Select.Option value="M">Masculino</Select.Option>
+                <Select.Option value="F">Femenino</Select.Option>
+              </Select>
+            </Form.Item>
+            <Form.Item label="Fecha de Nacimiento">
+              <DatePicker
+                value={formData.fechaNacimiento}
+                onChange={(date) =>
+                  handleInputChange("fechaNacimiento", date ? date : null)
+                }
+                format="YYYY-MM-DD"
+              />
+            </Form.Item>
+            <Form.Item label="Grupo Sanguíneo">
+              <Input
+                name="grupoSanguineo"
+                value={formData.grupoSanguineo}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+            <Form.Item label="Alergias">
+              <TextArea
+                name="alergias"
+                value={formData.alergias}
+                onChange={(e) => handleInputChange(e.target.name, e.target.value)}
+              />
+            </Form.Item>
+          </Form>
+        </TabPane>
+      </Tabs>
     </Modal>
   );
 };
