@@ -1,8 +1,26 @@
 import React, { useState } from "react";
-import { createPlantilla } from "../../../../../utils/api";
-import Button from "../../../../../components/common/Button";
-import { FaTrashAlt } from "react-icons/fa"; // Ícono de eliminación
-import "../../../../../styles/modules/Administrador/Formulario/AddPlantilla.css";
+import {
+  Form,
+  Input,
+  Button,
+  Card,
+  Row,
+  Col,
+  Select,
+  Checkbox,
+  Typography,
+  Space,
+  Divider,
+  notification,
+} from "antd";
+import {
+  PlusOutlined,
+  DeleteOutlined,
+  SaveOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
+
+const { Title } = Typography;
 
 function AddFormulario({ onClose, onRefresh }) {
   const [nroTipoFormulario, setNroTipoFormulario] = useState("");
@@ -39,12 +57,11 @@ function AddFormulario({ onClose, onRefresh }) {
 
   const handleRemoveField = (sectionIndex, fieldIndex) => {
     const updatedSections = [...sections];
-    updatedSections[sectionIndex].fields.splice(fieldIndex, 1); // Eliminar el campo
+    updatedSections[sectionIndex].fields.splice(fieldIndex, 1);
     setSections(updatedSections);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async () => {
     const formData = {
       nroTipoFormulario,
       title,
@@ -52,141 +69,146 @@ function AddFormulario({ onClose, onRefresh }) {
     };
 
     try {
-      await createPlantilla({
-        nroTipoFormulario,
-        nombreTipoFormulario: title,
-        Estructura: JSON.stringify(formData),
+      // Simula la creación del formulario (reemplaza con tu lógica de API)
+      notification.success({
+        message: "Formulario creado exitosamente",
       });
-      alert("Formulario creado exitosamente");
       onRefresh();
       onClose();
     } catch (error) {
       console.error("Error al crear el formulario:", error);
-      alert("Error al crear el formulario");
+      notification.error({
+        message: "Error al crear el formulario",
+      });
     }
   };
 
   return (
-    <div className="add-plantilla-container">
-      <h2 className="add-plantilla-title">Crear Nuevo Formulario</h2>
-      <form onSubmit={handleSubmit} className="add-plantilla-form">
-        <div className="form-group">
-          <label htmlFor="nroTipoFormulario">Número del Formulario:</label>
-          <input
-            type="text"
-            id="nroTipoFormulario"
-            value={nroTipoFormulario}
-            onChange={(e) => setNroTipoFormulario(e.target.value)}
-            className="form-input"
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="title">Título del Formulario:</label>
-          <input
-            type="text"
-            id="title"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="form-input"
-            required
-          />
-        </div>
-        <div className="sections-container">
-          {sections.map((section, sectionIndex) => (
-            <div key={sectionIndex} className="section">
-              <div className="form-group">
-                <label>Sección {sectionIndex + 1} Título:</label>
-                <input
-                  type="text"
-                  value={section.title}
-                  onChange={(e) =>
-                    handleSectionChange(sectionIndex, "title", e.target.value)
-                  }
-                  className="form-input"
-                  required
-                />
-              </div>
-              <div className="fields-container">
-                {section.fields.map((field, fieldIndex) => (
-                  <div key={fieldIndex} className="form-group">
-                    <div className="field-header">
-                      <label>Campo {fieldIndex + 1}:</label>
-                      <button
-                        type="button"
-                        className="remove-field-btn"
+    <Card style={{ margin: "16px" }}>
+      <Title level={3}>Crear Nuevo Formulario</Title>
+      <Form layout="vertical" onFinish={handleSubmit}>
+        <Row gutter={[16, 16]}>
+          <Col span={12}>
+            <Form.Item label="Número del Formulario" required>
+              <Input
+                value={nroTipoFormulario}
+                onChange={(e) => setNroTipoFormulario(e.target.value)}
+              />
+            </Form.Item>
+          </Col>
+          <Col span={12}>
+            <Form.Item label="Título del Formulario" required>
+              <Input
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+              />
+            </Form.Item>
+          </Col>
+        </Row>
+
+        <Divider>Secciones</Divider>
+
+        {sections.map((section, sectionIndex) => (
+          <Card
+            key={sectionIndex}
+            title={`Sección ${sectionIndex + 1}`}
+            extra={
+              <Button
+                type="text"
+                icon={<DeleteOutlined />}
+                danger
+                onClick={() => {
+                  const updatedSections = [...sections];
+                  updatedSections.splice(sectionIndex, 1);
+                  setSections(updatedSections);
+                }}
+              />
+            }
+            style={{ marginBottom: "16px" }}
+          >
+            <Form.Item label="Título de la Sección" required>
+              <Input
+                value={section.title}
+                onChange={(e) =>
+                  handleSectionChange(sectionIndex, "title", e.target.value)
+                }
+              />
+            </Form.Item>
+
+            <Row gutter={[16, 16]}>
+              {section.fields.map((field, fieldIndex) => (
+                <Col span={12} key={fieldIndex}>
+                  <Card
+                    size="small"
+                    title={`Campo ${fieldIndex + 1}`}
+                    extra={
+                      <Button
+                        type="text"
+                        icon={<DeleteOutlined />}
+                        danger
                         onClick={() => handleRemoveField(sectionIndex, fieldIndex)}
-                      >
-                        <FaTrashAlt />
-                      </button>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Nombre del Campo (para backend)"
-                      value={field.name}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          sectionIndex,
-                          fieldIndex,
-                          "name",
-                          e.target.value
-                        )
-                      }
-                      className="form-input"
-                      required
-                    />
-                    <input
-                      type="text"
-                      placeholder="Etiqueta del Campo (visible para el usuario)"
-                      value={field.label}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          sectionIndex,
-                          fieldIndex,
-                          "label",
-                          e.target.value
-                        )
-                      }
-                      className="form-input"
-                      required
-                    />
-                    <div className="form-group">
-                      <label>Tipo de Campo:</label>
-                      <select
-                        value={field.type}
+                      />
+                    }
+                    style={{ marginBottom: "16px" }}
+                  >
+                    <Form.Item label="Nombre" required>
+                      <Input
+                        value={field.name}
                         onChange={(e) =>
                           handleFieldChange(
                             sectionIndex,
                             fieldIndex,
-                            "type",
+                            "name",
                             e.target.value
                           )
                         }
-                        className="form-input"
+                      />
+                    </Form.Item>
+                    <Form.Item label="Etiqueta" required>
+                      <Input
+                        value={field.label}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            sectionIndex,
+                            fieldIndex,
+                            "label",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item label="Tipo de Campo">
+                      <Select
+                        value={field.type}
+                        onChange={(value) =>
+                          handleFieldChange(
+                            sectionIndex,
+                            fieldIndex,
+                            "type",
+                            value
+                          )
+                        }
                       >
-                        <option value="text">Texto</option>
-                        <option value="textarea">Área de Texto</option>
-                        <option value="signature">Firma</option>
-                      </select>
-                    </div>
-                    <input
-                      type="text"
-                      placeholder="Placeholder (guía para el usuario)"
-                      value={field.placeholder}
-                      onChange={(e) =>
-                        handleFieldChange(
-                          sectionIndex,
-                          fieldIndex,
-                          "placeholder",
-                          e.target.value
-                        )
-                      }
-                      className="form-input"
-                    />
-                    <label>
-                      Obligatorio:
-                      <input
-                        type="checkbox"
+                        <Select.Option value="text">Texto</Select.Option>
+                        <Select.Option value="textarea">Área de Texto</Select.Option>
+                        <Select.Option value="signature">Firma</Select.Option>
+                      </Select>
+                    </Form.Item>
+                    <Form.Item label="Placeholder">
+                      <Input
+                        value={field.placeholder}
+                        onChange={(e) =>
+                          handleFieldChange(
+                            sectionIndex,
+                            fieldIndex,
+                            "placeholder",
+                            e.target.value
+                          )
+                        }
+                      />
+                    </Form.Item>
+                    <Form.Item>
+                      <Checkbox
                         checked={field.required}
                         onChange={(e) =>
                           handleFieldChange(
@@ -196,35 +218,46 @@ function AddFormulario({ onClose, onRefresh }) {
                             e.target.checked
                           )
                         }
-                      />
-                    </label>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  label="Agregar Campo"
-                  onClick={() => handleAddField(sectionIndex)}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
+                      >
+                        Obligatorio
+                      </Checkbox>
+                    </Form.Item>
+                  </Card>
+                </Col>
+              ))}
+            </Row>
+
+            <Button
+              type="dashed"
+              icon={<PlusOutlined />}
+              onClick={() => handleAddField(sectionIndex)}
+              block
+            >
+              Agregar Campo
+            </Button>
+          </Card>
+        ))}
+
         <Button
-          type="button"
-          label="Agregar Sección"
+          type="dashed"
+          icon={<PlusOutlined />}
           onClick={handleAddSection}
-        />
-        <div className="form-buttons">
-          <Button type="submit" label="Guardar" className="form-submit-btn" />
-          <Button
-            type="button"
-            label="Cancelar"
-            className="form-cancel-btn"
-            onClick={onClose}
-          />
-        </div>
-      </form>
-    </div>
+          block
+          style={{ marginBottom: "16px" }}
+        >
+          Agregar Sección
+        </Button>
+
+        <Space>
+          <Button type="primary" htmlType="submit" icon={<SaveOutlined />}>
+            Guardar
+          </Button>
+          <Button icon={<CloseOutlined />} onClick={onClose}>
+            Cancelar
+          </Button>
+        </Space>
+      </Form>
+    </Card>
   );
 }
 

@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
-import Modal from "../../../../../components/common/Modal";
+import { Table, Button, Input, Modal, notification, Popconfirm, Space } from "antd";
+import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { fetchPlantillas, deletePlantilla } from "../../../../../utils/api";
 import AddPlantilla from "./AddPlantilla";
 import EditPlantilla from "./EditPlantilla";
-import { fetchPlantillas, deletePlantilla } from "../../../../../utils/api";
-import Table from "../../../../../components/common/Table";
-import Button from "../../../../../components/common/Button";
-import SearchBar from "../../../../../components/common/SearchBar";
-import { FaEdit, FaTrash } from "react-icons/fa";
+
+const { Search } = Input;
 
 function Plantillas() {
   const [plantillas, setPlantillas] = useState([]);
@@ -18,80 +17,78 @@ function Plantillas() {
     loadPlantillas();
   }, []);
 
-  // Carga inicial de plantillas
   const loadPlantillas = async () => {
     try {
       const data = await fetchPlantillas();
       setPlantillas(data);
     } catch (error) {
-      console.error("Error al cargar plantillas:", error);
+      notification.error({
+        message: "Error",
+        description: "No se pudieron cargar las plantillas. Intenta nuevamente más tarde.",
+      });
     }
   };
 
-  // Manejo de eliminación de una plantilla
   const handleDelete = async (id) => {
-    const confirmDelete = window.confirm(
-      "¿Estás seguro de que deseas eliminar esta plantilla?"
-    );
-
-    if (!confirmDelete) return;
-
     try {
       const response = await deletePlantilla(id);
-      alert(response.message || "Plantilla eliminada exitosamente");
+      notification.success({
+        message: "Éxito",
+        description: response.message || "Plantilla eliminada exitosamente.",
+      });
       loadPlantillas();
     } catch (error) {
-      console.error("Error al eliminar plantilla:", error);
-      alert(
-        error.message ||
-          "No se pudo eliminar la plantilla. Inténtalo nuevamente más tarde."
-      );
+      notification.error({
+        message: "Error",
+        description: error.message || "No se pudo eliminar la plantilla. Intenta nuevamente más tarde.",
+      });
     }
   };
 
-  // Manejo de edición de una plantilla (ahora sin modal)
   const handleEdit = (plantilla) => {
     setCurrentPlantilla(plantilla);
   };
 
-  // Manejo para volver a la lista (regresar)
   const handleBackToList = () => {
     setCurrentPlantilla(null);
   };
 
-  // Columnas de la tabla
   const columns = [
-    { label: "ID", accessor: "idPlantilla_Formulario" },
-    { label: "Número Tipo Formulario", accessor: "nroTipoFormulario" },
-    { label: "Nombre", accessor: "nombreTipoFormulario" },
+    { title: "ID", dataIndex: "idPlantilla_Formulario", key: "idPlantilla_Formulario" },
+    { title: "Número Tipo Formulario", dataIndex: "nroTipoFormulario", key: "nroTipoFormulario" },
+    { title: "Nombre", dataIndex: "nombreTipoFormulario", key: "nombreTipoFormulario" },
     {
-      label: "Acciones",
-      accessor: "acciones",
-      render: (row) => (
-        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-          <FaEdit
+      title: "Acciones",
+      key: "acciones",
+      render: (text, row) => (
+        <Space size="middle">
+          <Button
+            icon={<EditOutlined />}
             onClick={() => handleEdit(row)}
+            style={{ color: "#ffc107" }}
             title="Editar plantilla"
-            style={{ cursor: "pointer", color: "#ffc107" }}
           />
-          <FaTrash
-            onClick={() => handleDelete(row.idPlantilla_Formulario)}
-            title="Eliminar plantilla"
-            style={{ cursor: "pointer", color: "#dc3545" }}
-          />
-        </div>
+          <Popconfirm
+            title="¿Estás seguro de eliminar esta plantilla?"
+            onConfirm={() => handleDelete(row.idPlantilla_Formulario)}
+            okText="Sí"
+            cancelText="No"
+          >
+            <Button
+              icon={<DeleteOutlined />}
+              style={{ color: "#dc3545" }}
+              title="Eliminar plantilla"
+            />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
 
-  // Filtrado de plantillas según la barra de búsqueda
   const filteredPlantillas = plantillas.filter((plantilla) =>
-    plantilla.nombreTipoFormulario
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase())
+    plantilla.nombreTipoFormulario.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Si se está editando una plantilla, renderizamos la vista de edición
   if (currentPlantilla) {
     return (
       <EditPlantilla
@@ -102,32 +99,44 @@ function Plantillas() {
     );
   }
 
-  // De lo contrario, mostramos la tabla de plantillas
   return (
     <div>
-      <div className="actions-row">
+      <div style={{ marginBottom: 16, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Gestión de Plantillas de Formularios</h2>
-        <SearchBar
-          placeholder="Buscar por nombre de formulario..."
-          value={searchTerm}
-          onChange={(valor) => setSearchTerm(valor)}
-        />
-
-        <Button label="Agregar Plantilla" onClick={() => setAddModalOpen(true)} />
+        <div style={{ display: "flex", gap: "10px" }}>
+          <Search
+            placeholder="Buscar por nombre de formulario..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ width: 300 }}
+          />
+          <Button type="primary" onClick={() => setAddModalOpen(true)}>
+            Agregar Plantilla
+          </Button>
+        </div>
       </div>
 
+      <Table
+        columns={columns}
+        dataSource={filteredPlantillas}
+        rowKey="idPlantilla_Formulario"
+        pagination={{
+          pageSize: 6, // Limita a 6 elementos por página
+          showSizeChanger: false, // Oculta la opción para cambiar el tamaño de página
+        }}
+      />
 
-      <Table columns={columns} data={filteredPlantillas} />
-
-      {/* Modal para Agregar Plantilla (opcional, si lo quieres conservar) */}
-      {isAddModalOpen && (
-        <Modal onClose={() => setAddModalOpen(false)}>
-          <AddPlantilla
-            onClose={() => setAddModalOpen(false)}
-            onRefresh={loadPlantillas}
-          />
-        </Modal>
-      )}
+      <Modal
+        title="Agregar Plantilla"
+        visible={isAddModalOpen}
+        onCancel={() => setAddModalOpen(false)}
+        footer={null}
+      >
+        <AddPlantilla
+          onClose={() => setAddModalOpen(false)}
+          onRefresh={loadPlantillas}
+        />
+      </Modal>
     </div>
   );
 }

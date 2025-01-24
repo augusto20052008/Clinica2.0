@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from "react";
-import Button from "../../../../components/common/Button";
+import { Button, Form, Input, AutoComplete, message } from "antd";
+import { SearchOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
 import { createHistoria, fetchPatients, fetchHistorias } from "../../../../utils/api";
-import SearchBar from "../../../../components/common/SearchBar";
-import "../../../../styles/modules/Administrador/autocomplete.css";
 
 function AddHistoriaClinica({ onClose, onRefresh }) {
   const [formData, setFormData] = useState({
@@ -62,83 +61,83 @@ function AddHistoriaClinica({ onClose, onRefresh }) {
     setPacienteExiste(existe);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  const handleSubmit = async (values) => {
     if (!formData.Paciente_identificacion) {
-      alert("Por favor, completa la identificación del paciente.");
+      message.error("Por favor, completa la identificación del paciente.");
       return;
     }
 
     if (pacienteExiste === false) {
-      alert("El paciente no existe. Por favor, créalo primero.");
+      message.error("El paciente no existe. Por favor, créalo primero.");
       return;
     }
 
     const dataToSend = {
-      ...formData,
+      ...values,
       nroHistoriaClinica: formatHistoriaClinicaNumber(ultimoNumeroHistoria),
     };
 
     try {
-      console.log("Datos enviados al backend:", dataToSend);
       await createHistoria(dataToSend);
-      alert("Historia Clínica Agregada");
+      message.success("Historia Clínica Agregada");
       onRefresh();
       onClose();
     } catch (error) {
       console.error("Error al crear historia clínica:", error);
-      alert(
-        error.response?.data?.message || "Error al crear historia clínica."
-      );
+      message.error(error.response?.data?.message || "Error al crear historia clínica.");
     }
   };
 
   return (
-    <div>
-      <h2>Agregar Nueva Historia Clínica</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="Paciente_identificacion">
-            Identificación del Paciente:
-          </label>
-          <SearchBar
+    <div style={{ padding: 20 }}>
+      <Form onFinish={handleSubmit} layout="vertical">
+        <Form.Item
+          label="Identificación del Paciente"
+          name="Paciente_identificacion"
+          initialValue={formData.Paciente_identificacion}
+          rules={[{ required: true, message: "Por favor, ingrese la identificación del paciente." }]}
+        >
+          <AutoComplete
+            options={filteredPacientes.map((paciente) => ({
+              value: paciente.identificacion,
+              label: (
+                <div>
+                  <strong>{paciente.identificacion}</strong> - {paciente.primerNombre} {paciente.apellidoMaterno}
+                </div>
+              ),
+            }))}
+            onSearch={handleInputChange}
             placeholder="Buscar identificación del paciente"
-            value={formData.Paciente_identificacion}
-            onChange={handleInputChange}
+            allowClear
+            suffixIcon={<SearchOutlined />}
           />
-          {filteredPacientes.length > 0 && (
-            <ul className="autocomplete-list">
-              {filteredPacientes.map((paciente) => (
-                <li
-                  key={paciente.identificacion}
-                  onClick={() =>
-                    setFormData({
-                      ...formData,
-                      Paciente_identificacion: paciente.identificacion,
-                    })
-                  }
-                >
-                  <span className="id">{paciente.identificacion}</span>
-                  <span className="name">
-                    {paciente.primerNombre} {paciente.apellidoMaterno}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          )}
-          {pacienteExiste === true && (
-            <p style={{ color: "green" }}>Paciente encontrado.</p>
-          )}
-          {pacienteExiste === false && (
-            <p style={{ color: "red" }}>Paciente no encontrado.</p>
-          )}
-        </div>
+        </Form.Item>
+
+        {pacienteExiste === true && (
+          <p style={{ color: "green" }}>Paciente encontrado.</p>
+        )}
+        {pacienteExiste === false && (
+          <p style={{ color: "red" }}>Paciente no encontrado.</p>
+        )}
+
         <div className="form-buttons">
-          <Button type="submit" label="Guardar" />
-          <Button type="button" label="Cancelar" onClick={onClose} />
+          <Button
+            type="primary"
+            htmlType="submit"
+            icon={<SaveOutlined />}
+            style={{ marginRight: 10 }}
+          >
+            Guardar
+          </Button>
+          <Button
+            type="default"
+            onClick={onClose}
+            icon={<CloseOutlined />}
+          >
+            Cancelar
+          </Button>
         </div>
-      </form>
+      </Form>
     </div>
   );
 }

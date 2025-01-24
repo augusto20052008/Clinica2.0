@@ -1,12 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { updatePlantilla } from "../../../../../utils/api";
-import Button from "../../../../../components/common/Button";
 import {
-  FaEye,
-  FaEyeSlash,
-  FaTrash,
-} from "react-icons/fa"; // Importación de íconos de React Icons
-import "../../../../../styles/modules/Administrador/Formulario/EditPlantilla.css";
+  Layout,
+  Menu,
+  Button,
+  Form,
+  Input,
+  Space,
+  Select,
+  Typography,
+  Divider,
+  Popconfirm,
+  notification,
+  Row,
+  Col,
+  Pagination,
+} from "antd";
+import {
+  EyeOutlined,
+  EyeInvisibleOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  SaveOutlined,
+  CloseOutlined,
+} from "@ant-design/icons";
+
+const { Sider, Content } = Layout;
+const { Title } = Typography;
 
 function EditPlantilla({ plantilla, onClose, onRefresh }) {
   const [formData, setFormData] = useState({
@@ -18,11 +37,10 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
         : plantilla.Estructura || { sections: [] },
   });
 
-  // Sección activa en la que el usuario está editando
   const [activeSection, setActiveSection] = useState(0);
-
-  // Array para controlar la visibilidad de cada sección
   const [visibleSections, setVisibleSections] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 4;
 
   useEffect(() => {
     setFormData({
@@ -35,20 +53,17 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
     });
   }, [plantilla]);
 
-  // Sincroniza el array de visibilidad con el número de secciones
   useEffect(() => {
     if (formData.Estructura?.sections) {
       setVisibleSections(formData.Estructura.sections.map(() => true));
     }
   }, [formData.Estructura.sections]);
 
-  // Actualiza valores del formData (ej: nombreTipoFormulario)
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Función genérica para actualizar la estructura (secciones, fields, etc.)
   const handleStructureChange = (path, value) => {
     const keys = path.split(".");
     const updatedStructure = { ...formData.Estructura };
@@ -63,7 +78,6 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
     setFormData((prev) => ({ ...prev, Estructura: updatedStructure }));
   };
 
-  // Agrega una nueva sección
   const handleAddSection = () => {
     const updatedSections = [
       ...formData.Estructura.sections,
@@ -80,7 +94,6 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
     setVisibleSections((prev) => [...prev, true]);
   };
 
-  // Agrega un campo en la sección activa
   const handleAddField = (sectionIndex) => {
     const updatedSections = [...formData.Estructura.sections];
     updatedSections[sectionIndex].fields.push({
@@ -94,7 +107,6 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
     }));
   };
 
-  // Elimina un campo
   const handleRemoveField = (sectionIndex, fieldIndex) => {
     const updatedSections = [...formData.Estructura.sections];
     updatedSections[sectionIndex].fields.splice(fieldIndex, 1);
@@ -104,29 +116,24 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
     }));
   };
 
-  // Elimina una sección completa
   const handleRemoveSection = (sectionIndex) => {
     const updatedSections = [...formData.Estructura.sections];
     updatedSections.splice(sectionIndex, 1);
 
-    // Actualizamos el formData con las secciones nuevas
     setFormData((prev) => ({
       ...prev,
       Estructura: { ...prev.Estructura, sections: updatedSections },
     }));
 
-    // También ajustamos la visibilidad
     const updatedVisibleSections = [...visibleSections];
     updatedVisibleSections.splice(sectionIndex, 1);
     setVisibleSections(updatedVisibleSections);
 
-    // Ajustar la sección activa (si borramos la última, que quede en la anterior)
     if (activeSection >= updatedSections.length) {
       setActiveSection(updatedSections.length - 1);
     }
   };
 
-  // Toggle de visibilidad para una sección
   const toggleSectionVisibility = (index) => {
     setVisibleSections((prev) => {
       const updated = [...prev];
@@ -135,133 +142,117 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
     });
   };
 
-  // Submit del formulario
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.id) {
-      alert("El ID de la plantilla es indefinido. Verifica los datos.");
-      return;
-    }
     try {
       const updatedPlantilla = {
         ...formData,
         Estructura: JSON.stringify(formData.Estructura),
       };
-      await updatePlantilla(formData.id, updatedPlantilla);
-      alert("Plantilla actualizada exitosamente");
+      notification.success({
+        message: "Plantilla actualizada",
+        description: "Los cambios se guardaron exitosamente.",
+      });
       onRefresh();
-      onClose(); // Vuelve a la lista
+      onClose();
     } catch (error) {
       console.error("Error al actualizar plantilla:", error);
-      alert("Error al actualizar la plantilla");
+      notification.error({
+        message: "Error",
+        description: "Hubo un problema al guardar los cambios.",
+      });
     }
   };
 
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+
   return (
-    <div className="edit-plantilla-container">
-      {/* SIDEBAR */}
-      <aside className="edit-plantilla-sidebar">
-        <h2 className="sidebar-title">Secciones</h2>
-        <div className="sidebar-sections">
+    <Layout style={{ height: "100vh" }}>
+      <Sider width={300} theme="light">
+        <Title level={4} style={{ padding: "16px" }}>
+          Secciones
+        </Title>
+        <Menu mode="inline" selectedKeys={[`${activeSection}`]}>
           {formData.Estructura.sections.map((section, index) => (
-            <div
-              key={`tab-${index}`}
-              className={`sidebar-section-item ${
-                activeSection === index ? "active" : ""
-              }`}
+            <Menu.Item
+              key={index}
+              onClick={() => setActiveSection(index)}
+              icon={
+                visibleSections[index] ? <EyeOutlined /> : <EyeInvisibleOutlined />
+              }
+              style={{ display: "flex", justifyContent: "space-between" }}
             >
-              <button
-                type="button"
-                className="section-button"
-                onClick={() => setActiveSection(index)}
+              {section.title || `Sección ${index + 1}`}
+              <Popconfirm
+                title="¿Eliminar esta sección?"
+                onConfirm={() => handleRemoveSection(index)}
+                okText="Sí"
+                cancelText="No"
               >
-                {section.title || `Sección ${index + 1}`}
-              </button>
-              <div className="sidebar-section-item-actions">
-                {/* Botón "ojito" para mostrar/ocultar */}
-                <button
-                  type="button"
-                  className="visibility-button"
-                  onClick={() => toggleSectionVisibility(index)}
-                >
-                  {visibleSections[index] ? <FaEye /> : <FaEyeSlash />}
-                </button>
-                {/* Botón tacho de basura para eliminar la sección */}
-                <button
-                  type="button"
-                  className="remove-section-button"
-                  onClick={() => handleRemoveSection(index)}
-                >
-                  <FaTrash />
-                </button>
-              </div>
-            </div>
+                <DeleteOutlined style={{ marginLeft: "auto" }} />
+              </Popconfirm>
+            </Menu.Item>
           ))}
-        </div>
-
-        {/* Botón para agregar sección */}
-        <Button
-          type="button"
-          label="Agregar Sección"
-          onClick={handleAddSection}
-          className="add-section-btn"
-        />
-
-        {/* Botones de Guardar y Cancelar en el sidebar */}
-        <div className="sidebar-buttons">
+        </Menu>
+        <Divider />
+        <Space direction="vertical" style={{ padding: "16px" }}>
           <Button
-            type="submit"
-            label="Guardar"
-            className="form-submit-btn"
+            type="dashed"
+            icon={<PlusOutlined />}
+            onClick={handleAddSection}
+            block
+          >
+            Agregar Sección
+          </Button>
+          <Button
+            type="primary"
+            icon={<SaveOutlined />}
             onClick={handleSubmit}
-          />
+            block
+          >
+            Guardar Cambios
+          </Button>
           <Button
-            type="button"
-            label="Cancelar"
-            className="form-cancel-btn"
+            icon={<CloseOutlined />}
             onClick={onClose}
-          />
-        </div>
-      </aside>
-
-      {/* CONTENEDOR PRINCIPAL DEL FORMULARIO */}
-      <div className="edit-plantilla-form-container">
-        <form onSubmit={handleSubmit} className="edit-plantilla-form">
-          <h2>Editar Plantilla</h2>
-
-          {/* Datos principales de la plantilla */}
-          <div className="form-group">
-            <label>Número de Formulario:</label>
-            <input
-              type="text"
-              name="nroTipoFormulario"
-              value={formData.nroTipoFormulario || ""}
-              onChange={handleChange}
-              className="form-input"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Nombre del Formulario:</label>
-            <input
-              type="text"
-              name="nombreTipoFormulario"
-              value={formData.nombreTipoFormulario || ""}
-              onChange={handleChange}
-              className="form-input"
-              required
-            />
-          </div>
-
-          {/* Render de la sección activa (si está visible) */}
+            block
+          >
+            Cancelar
+          </Button>
+        </Space>
+      </Sider>
+      <Content style={{ padding: "24px" }}>
+        <Form layout="vertical">
+          <Row gutter={[16, 16]}>
+            <Col span={12}>
+              <Form.Item label="Número de Formulario">
+                <Input
+                  name="nroTipoFormulario"
+                  value={formData.nroTipoFormulario || ""}
+                  onChange={handleChange}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item label="Nombre del Formulario">
+                <Input
+                  name="nombreTipoFormulario"
+                  value={formData.nombreTipoFormulario || ""}
+                  onChange={handleChange}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
           {formData.Estructura.sections[activeSection] &&
             visibleSections[activeSection] && (
-              <div className="section">
-                <div className="form-group">
-                  <label>Título de la Sección:</label>
-                  <input
-                    type="text"
+              <div>
+                <Form.Item label="Título de la Sección">
+                  <Input
                     value={
                       formData.Estructura.sections[activeSection].title || ""
                     }
@@ -271,81 +262,84 @@ function EditPlantilla({ plantilla, onClose, onRefresh }) {
                         e.target.value
                       )
                     }
-                    className="form-input"
-                    required
                   />
-                </div>
-
-                {/* Contenedor de campos en 2 columnas */}
-                <div className="fields-container">
-                  {formData.Estructura.sections[activeSection].fields.map(
-                    (field, fieldIndex) => (
-                      <div key={`field-${fieldIndex}`} className="form-group">
-                        <label>Campo {fieldIndex + 1}:</label>
-                        <input
-                          type="text"
-                          placeholder="Nombre del Campo"
-                          value={field.name || ""}
-                          onChange={(e) =>
-                            handleStructureChange(
-                              `sections.${activeSection}.fields.${fieldIndex}.name`,
-                              e.target.value
-                            )
-                          }
-                          className="form-input"
-                          required
-                        />
-                        <input
-                          type="text"
-                          placeholder="Etiqueta del Campo"
-                          value={field.label || ""}
-                          onChange={(e) =>
-                            handleStructureChange(
-                              `sections.${activeSection}.fields.${fieldIndex}.label`,
-                              e.target.value
-                            )
-                          }
-                          className="form-input"
-                          required
-                        />
-                        <select
-                          value={field.type || "text"}
-                          onChange={(e) =>
-                            handleStructureChange(
-                              `sections.${activeSection}.fields.${fieldIndex}.type`,
-                              e.target.value
-                            )
-                          }
-                          className="form-input"
-                        >
-                          <option value="text">Texto</option>
-                          <option value="textarea">Área de Texto</option>
-                          <option value="signature">Firma</option>
-                        </select>
-                        <button
-                          type="button"
-                          className="remove-field-btn"
+                </Form.Item>
+                <Row gutter={[16, 16]}>
+                  {formData.Estructura.sections[activeSection].fields
+                    .slice(startIndex, endIndex)
+                    .map((field, fieldIndex) => (
+                      <Col span={12} key={fieldIndex}>
+                        <Form.Item label={`Campo ${startIndex + fieldIndex + 1} - Nombre`}>
+                          <Input
+                            value={field.name || ""}
+                            onChange={(e) =>
+                              handleStructureChange(
+                                `sections.${activeSection}.fields.${startIndex + fieldIndex}.name`,
+                                e.target.value
+                              )
+                            }
+                          />
+                        </Form.Item>
+                        <Form.Item label="Etiqueta">
+                          <Input
+                            value={field.label || ""}
+                            onChange={(e) =>
+                              handleStructureChange(
+                                `sections.${activeSection}.fields.${startIndex + fieldIndex}.label`,
+                                e.target.value
+                              )
+                            }
+                          />
+                        </Form.Item>
+                        <Form.Item label="Tipo de Campo">
+                          <Select
+                            value={field.type || "text"}
+                            onChange={(value) =>
+                              handleStructureChange(
+                                `sections.${activeSection}.fields.${startIndex + fieldIndex}.type`,
+                                value
+                              )
+                            }
+                          >
+                            <Select.Option value="text">Texto</Select.Option>
+                            <Select.Option value="textarea">Área de Texto</Select.Option>
+                            <Select.Option value="signature">Firma</Select.Option>
+                          </Select>
+                        </Form.Item>
+                        <Button
+                          type="link"
+                          danger
+                          icon={<DeleteOutlined />}
                           onClick={() =>
-                            handleRemoveField(activeSection, fieldIndex)
+                            handleRemoveField(activeSection, startIndex + fieldIndex)
                           }
                         >
                           Eliminar Campo
-                        </button>
-                      </div>
-                    )
-                  )}
-                </div>
-                <Button
-                  type="button"
-                  label="Agregar Campo"
-                  onClick={() => handleAddField(activeSection)}
-                  className="add-field-btn"
+                        </Button>
+                        <Divider />
+                      </Col>
+                    ))}
+                </Row>
+                <Pagination
+                  current={currentPage}
+                  pageSize={itemsPerPage}
+                  total={formData.Estructura.sections[activeSection].fields.length}
+                  onChange={handlePageChange}
+                  style={{ textAlign: "center", marginTop: "16px" }}
                 />
+                <Button
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  onClick={() => handleAddField(activeSection)}
+                  block
+                >
+                  Agregar Campo
+                </Button>
               </div>
             )}
-        </form>
-      </div>
-    </div>
+        </Form>
+      </Content>
+    </Layout>
   );
 }
 

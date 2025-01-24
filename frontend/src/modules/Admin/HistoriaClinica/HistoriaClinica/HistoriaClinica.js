@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Input, Modal, notification } from "antd";
-import { FaEdit, FaTrash, FaEye } from "react-icons/fa";
+import { Table, Button, Input, Modal, notification, Popconfirm, Space } from "antd";
+import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
 import AddHistoriaClinica from "./AddHistoriaClinica";
 import EditHistoriaClinica from "./EditHistoriaClinica";
 import HistoriaClinicaProfile from "./HistoriaClinicaProfile";
@@ -77,26 +77,29 @@ function HistoriaClinica() {
       title: "Acciones",
       key: "acciones",
       render: (text, record) => (
-        <div style={{ display: "flex", gap: "10px" }}>
+        <Space size="middle">
           <Button
-            icon={<FaEye />}
+            icon={<EyeOutlined />}
             onClick={() => handleView(record)}
-            type="link"
             style={{ color: "#1890ff" }}
           />
           <Button
-            icon={<FaEdit />}
+            icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
-            type="link"
             style={{ color: "#ffc107" }}
           />
-          <Button
-            icon={<FaTrash />}
-            onClick={() => handleDelete(record.idHistoriaClinica, record.Paciente_identificacion)}
-            type="link"
-            style={{ color: "#dc3545" }}
-          />
-        </div>
+          <Popconfirm
+            title="¿Estás seguro de eliminar esta historia clínica?"
+            onConfirm={() => handleDelete(record.idHistoriaClinica, record.Paciente_identificacion)}
+            okText="Sí"
+            cancelText="No"
+          >
+            <Button
+              icon={<DeleteOutlined />}
+              style={{ color: "#dc3545" }}
+            />
+          </Popconfirm>
+        </Space>
       ),
     },
   ];
