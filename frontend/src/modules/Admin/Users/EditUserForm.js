@@ -1,199 +1,206 @@
-import React, { useEffect } from "react";
-import {
-  Modal,
-  Form,
-  Input,
-  DatePicker,
-  Select,
-  Upload,
-  Row,
-  Col,
-  Button,
-  message,
-} from "antd";
-import { UploadOutlined } from "@ant-design/icons";
-import moment from "moment";
-
-const { Option } = Select;
+import React, { useState, useEffect } from 'react';
+import Modal from '../../../components/common/Modal';
+import Button from '../../../components/common/Button';
 
 const EditUserForm = ({ onClose, onUpdate, initialData }) => {
-  const [form] = Form.useForm();
+  const [formData, setFormData] = useState({
+    identificacion: '',
+    nombres: '',
+    apellidos: '',
+    fechaNacimiento: '',
+    direccionDomicilio: '',
+    telefono: '',
+    sexo: '',
+    correo: '',
+    estadoCivil: '',
+    especialidad: '',
+    fotografia: null,
+    consultorio: '',
+    estado: '',
+    rol: '',
+    contraseña: '',
+  });
 
+  // Cargar datos iniciales al abrir el formulario
   useEffect(() => {
     if (initialData) {
-      form.setFieldsValue({
-        ...initialData,
-        fechaNacimiento: initialData.fechaNacimiento
-          ? moment(initialData.fechaNacimiento)
-          : null,
-      });
+      setFormData({ ...initialData });
     }
-  }, [initialData, form]);
+  }, [initialData]);
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      if (values.fotografia) {
-        const file = values.fotografia.file;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64Blob = reader.result.split(",")[1];
-          values.fotografia = base64Blob;
-          onUpdate({ ...initialData, ...values });
-          message.success("Usuario actualizado exitosamente.");
-          onClose();
-        };
-        reader.readAsDataURL(file);
-      } else {
-        onUpdate({ ...initialData, ...values });
-        message.success("Usuario actualizado exitosamente.");
-        onClose();
-      }
-    } catch (error) {
-      message.error("Por favor, complete todos los campos requeridos.");
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Blob = reader.result.split(',')[1];
+        setFormData({ ...formData, fotografia: base64Blob });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onUpdate(formData);
+  };
+
   return (
-    <Modal
-      title="Editar Usuario"
-      visible
-      onCancel={onClose}
-      footer={null}
-      centered
-    >
-      <Form
-        form={form}
-        layout="vertical"
-        initialValues={initialData}
-        onFinish={handleSubmit}
-      >
-        <Row gutter={16}>
-          <Col span={12}>
-            <Form.Item
-              label="Identificación"
-              name="identificacion"
-              rules={[{ required: true, message: "La identificación es obligatoria." }]}
-            >
-              <Input disabled />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Nombres"
-              name="nombres"
-              rules={[{ required: true, message: "Los nombres son obligatorios." }]}
-            >
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Apellidos"
-              name="apellidos"
-              rules={[{ required: true, message: "Los apellidos son obligatorios." }]}
-            >
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Fecha de Nacimiento"
-              name="fechaNacimiento"
-            >
-              <DatePicker style={{ width: "100%" }} />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Dirección" name="direccionDomicilio">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Teléfono" name="telefono">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Sexo" name="sexo">
-              <Select>
-                <Option value="M">Masculino</Option>
-                <Option value="F">Femenino</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Correo"
-              name="correo"
-              rules={[{ required: true, type: "email", message: "El correo no es válido." }]}
-            >
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Estado Civil" name="estadoCivil">
-              <Select>
-                <Option value="Sol">Soltero</Option>
-                <Option value="Cas">Casado</Option>
-                <Option value="Div">Divorciado</Option>
-                <Option value="Viudo">Viudo</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Especialidad" name="especialidad">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Fotografía" name="fotografia">
-              <Upload beforeUpload={() => false} maxCount={1}>
-                <Button icon={<UploadOutlined />}>Subir Fotografía</Button>
-              </Upload>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Consultorio" name="consultorio">
-              <Input />
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Estado" name="estado">
-              <Select>
-                <Option value="Act">Activo</Option>
-                <Option value="Ina">Inactivo</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item label="Rol" name="rol">
-              <Select>
-                <Option value="Doctor">Doctor</Option>
-                <Option value="Admin">Administrador</Option>
-                <Option value="Enfermera">Enfermera</Option>
-              </Select>
-            </Form.Item>
-          </Col>
-          <Col span={12}>
-            <Form.Item
-              label="Contraseña"
-              name="contraseña"
-              rules={[{ required: true, message: "La contraseña es obligatoria." }]}
-            >
-              <Input.Password />
-            </Form.Item>
-          </Col>
-        </Row>
-        <div style={{ textAlign: "right", marginTop: 16 }}>
-          <Button onClick={onClose} style={{ marginRight: 8 }}>
-            Cancelar
-          </Button>
-          <Button type="primary" htmlType="submit">
-            Guardar Cambios
-          </Button>
+    <Modal onClose={onClose}>
+      <h2>Editar Usuario</h2>
+      <form className="form-grid" onSubmit={handleSubmit}>
+        <div className="form-field">
+          <label>Identificación</label>
+          <input
+            type="text"
+            name="identificacion"
+            value={formData.identificacion}
+            disabled // No se permite editar este campo
+          />
         </div>
-      </Form>
+        <div className="form-field">
+          <label>Nombres</label>
+          <input
+            type="text"
+            name="nombres"
+            value={formData.nombres}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Apellidos</label>
+          <input
+            type="text"
+            name="apellidos"
+            value={formData.apellidos}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Fecha de Nacimiento</label>
+          <input
+            type="date"
+            name="fechaNacimiento"
+            value={formData.fechaNacimiento}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Dirección</label>
+          <input
+            type="text"
+            name="direccionDomicilio"
+            value={formData.direccionDomicilio}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Teléfono</label>
+          <input
+            type="text"
+            name="telefono"
+            value={formData.telefono}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Sexo</label>
+          <select
+            name="sexo"
+            value={formData.sexo}
+            onChange={handleInputChange}
+          >
+            <option value="M">Masculino</option>
+            <option value="F">Femenino</option>
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Correo</label>
+          <input
+            type="email"
+            name="correo"
+            value={formData.correo}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Estado Civil</label>
+          <select
+            name="estadoCivil"
+            value={formData.estadoCivil}
+            onChange={handleInputChange}
+          >
+            <option value="Sol">Soltero</option>
+            <option value="Cas">Casado</option>
+            <option value="Div">Divorciado</option>
+            <option value="Viudo">Viudo</option>
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Especialidad</label>
+          <input
+            type="text"
+            name="especialidad"
+            value={formData.especialidad}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Fotografía</label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Consultorio</label>
+          <input
+            type="text"
+            name="consultorio"
+            value={formData.consultorio}
+            onChange={handleInputChange}
+          />
+        </div>
+        <div className="form-field">
+          <label>Estado</label>
+          <select
+            name="estado"
+            value={formData.estado}
+            onChange={handleInputChange}
+          >
+            <option value="Act">Activo</option>
+            <option value="Ina">Inactivo</option>
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Rol</label>
+          <select
+            name="rol"
+            value={formData.rol}
+            onChange={handleInputChange}
+          >
+            <option value="Doctor">Doctor</option>
+            <option value="Admin">Administrador</option>
+            <option value="Enfermera">Enfermera</option>
+          </select>
+        </div>
+        <div className="form-field">
+          <label>Contraseña</label>
+          <input
+            type="password"
+            name="contraseña"
+            value={formData.contraseña}
+            onChange={handleInputChange}
+          />
+        </div>
+        <Button type="submit" label="Guardar Cambios" className="primary" />
+      </form>
     </Modal>
   );
 };

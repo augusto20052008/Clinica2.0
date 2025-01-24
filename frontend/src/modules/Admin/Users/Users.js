@@ -1,129 +1,157 @@
-import React, { useState, useEffect } from 'react';
-import {
-  Table,
-  Button,
-  Input,
-  Select,
-  Space,
-  Modal,
-  Typography,
-  Popconfirm,
-  message,
-} from 'antd';
-import {
-  SearchOutlined,
-  PlusOutlined,
-  EditOutlined,
-  DeleteOutlined,
-  EyeOutlined,
-} from '@ant-design/icons';
-import AddUserForm from './AddUserForm';
-import EditUserForm from './EditUserForm';
-import UserProfileModal from './UserProfileModal';
-import { fetchUsers, fetchUserDetails, removeUser, createUser, updateUser } from '../../../utils/api';
+import React, { useState, useEffect } from "react";
+import { Table, Button, Input, Modal, notification, Popconfirm, Space, Select } from "antd";
+import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
+import AddUserForm from "./AddUserForm";
+import EditUserForm from "./EditUserForm";
+import UserProfileModal from "./UserProfileModal";
+import { fetchUsers, fetchUserDetails, removeUser, createUser, updateUser } from "../../../utils/api";
 
-const { Title } = Typography;
+const { Search } = Input;
 const { Option } = Select;
 
 const Users = () => {
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedEstado, setSelectedEstado] = useState('');
-  const [selectedRol, setSelectedRol] = useState('');
-  const [expandedUser, setExpandedUser] = useState(null);
-  const [isAddUserModalOpen, setIsAddUserModalOpen] = useState(false);
-  const [isEditUserModalOpen, setIsEditUserModalOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [currentEditUser, setCurrentEditUser] = useState(null);
+  const [expandedUser, setExpandedUser] = useState(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 6;
 
   useEffect(() => {
-    const loadUsers = async () => {
-      try {
-        const response = await fetchUsers();
-        if (response && response.data && Array.isArray(response.data)) {
-          setUsers(response.data);
-          setFilteredUsers(response.data);
-        } else {
-          setUsers([]);
-        }
-      } catch (error) {
-        console.error('Error al cargar los usuarios:', error);
-        setUsers([]);
-      }
-    };
     loadUsers();
   }, []);
 
   useEffect(() => {
-    const filtered = users.filter(
-      (user) =>
-        user.nombres.toLowerCase().includes(searchQuery.toLowerCase()) &&
-        (!selectedEstado || user.estado === selectedEstado) &&
-        (!selectedRol || user.rol === selectedRol)
-    );
+    const filtered = users.filter((user) => {
+      const matchesSearch =
+        user.identificacion.toLowerCase().includes(searchValue.toLowerCase()) ||
+        user.nombres.toLowerCase().includes(searchValue.toLowerCase());
+      const matchesRole = !roleFilter || user.rol === roleFilter;
+      return matchesSearch && matchesRole;
+    });
     setFilteredUsers(filtered);
-  }, [searchQuery, selectedEstado, selectedRol, users]);
+  }, [searchValue, roleFilter, users]);
+
+  const loadUsers = async () => {
+    try {
+      const response = await fetchUsers();
+      if (response && response.data && Array.isArray(response.data)) {
+        setUsers(response.data);
+        setFilteredUsers(response.data);
+      }
+    } catch (error) {
+      console.error("Error al cargar los usuarios:", error);
+    }
+  };
 
   const handleDeleteUser = async (identificacion) => {
     try {
       await removeUser(identificacion);
+      notification.success({
+        message: "Éxito",
+        description: "Usuario eliminado correctamente.",
+      });
       setUsers((prevUsers) => prevUsers.filter((user) => user.identificacion !== identificacion));
       setFilteredUsers((prevUsers) => prevUsers.filter((user) => user.identificacion !== identificacion));
-      message.success('Usuario eliminado correctamente.');
     } catch (error) {
-      console.error('Error al eliminar usuario:', error);
-      message.error('No se pudo eliminar el usuario. Por favor, inténtalo de nuevo.');
+      console.error("Error al eliminar usuario:", error);
+      notification.error({
+        message: "Error",
+        description: "No se pudo eliminar el usuario.",
+      });
     }
   };
 
+  const handleAddUser = async (newUser) => {
+    try {
+      const addedUser = await createUser(newUser);
+      setUsers((prevUsers) => [addedUser, ...prevUsers]);
+      setFilteredUsers((prevUsers) => [addedUser, ...prevUsers]);
+      setIsAddModalOpen(false);
+      notification.success({
+        message: "Éxito",
+        description: "Usuario agregado correctamente.",
+      });
+    } catch (error) {
+      console.error("Error al agregar usuario:", error);
+      notification.error({
+        message: "Error",
+        description: "No se pudo agregar el usuario.",
+      });
+    }
+  };
+
+  const handleEditUser = async (identificacion) => {
+    try {
+      const userDetails = await fetchUserDetails(identificacion);
+      setCurrentEditUser(userDetails);
+      setIsEditModalOpen(true);
+    } catch (error) {
+      console.error("Error al obtener detalles del usuario para editar:", error);
+    }
+  };
+
+  const handleUpdateUser = async (updatedUser) => {
+    try {
+      await updateUser(updatedUser.identificacion, updatedUser);
+      setUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.identificacion === updatedUser.identificacion ? updatedUser : user
+        )
+      );
+      setFilteredUsers((prevUsers) =>
+        prevUsers.map((user) =>
+          user.identificacion === updatedUser.identificacion ? updatedUser : user
+        )
+      );
+      setIsEditModalOpen(false);
+      notification.success({
+        message: "Éxito",
+        description: "Usuario actualizado correctamente.",
+      });
+    } catch (error) {
+      console.error("Error al actualizar usuario:", error);
+      notification.error({
+        message: "Error",
+        description: "No se pudo actualizar el usuario.",
+      });
+    }
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  const paginatedUsers = filteredUsers.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   const columns = [
+    { title: "Identificación", dataIndex: "identificacion", key: "identificacion" },
+    { title: "Nombres", dataIndex: "nombres", key: "nombres" },
+    { title: "Apellidos", dataIndex: "apellidos", key: "apellidos" },
+    { title: "Correo", dataIndex: "correo", key: "correo" },
+    { title: "Rol", dataIndex: "rol", key: "rol" },
+    { title: "Estado", dataIndex: "estado", key: "estado" },
     {
-      title: 'Identificación',
-      dataIndex: 'identificacion',
-      key: 'identificacion',
-    },
-    {
-      title: 'Nombres',
-      dataIndex: 'nombres',
-      key: 'nombres',
-    },
-    {
-      title: 'Apellidos',
-      dataIndex: 'apellidos',
-      key: 'apellidos',
-    },
-    {
-      title: 'Correo',
-      dataIndex: 'correo',
-      key: 'correo',
-    },
-    {
-      title: 'Rol',
-      dataIndex: 'rol',
-      key: 'rol',
-    },
-    {
-      title: 'Estado',
-      dataIndex: 'estado',
-      key: 'estado',
-    },
-    {
-      title: 'Acciones',
-      key: 'acciones',
+      title: "Acciones",
+      key: "acciones",
       render: (text, record) => (
         <Space size="middle">
           <Button
             icon={<EyeOutlined />}
             onClick={() => setExpandedUser(record)}
-            style={{ color: '#1890ff', border: 'none', background: 'transparent' }}
+            style={{ color: "#1890ff" }}
           />
           <Button
             icon={<EditOutlined />}
-            onClick={() => {
-              setCurrentEditUser(record);
-              setIsEditUserModalOpen(true);
-            }}
-            style={{ color: '#ffc107', border: 'none', background: 'transparent' }}
+            onClick={() => handleEditUser(record.identificacion)}
+            style={{ color: "#ffc107" }}
           />
           <Popconfirm
             title="¿Estás seguro de eliminar este usuario?"
@@ -133,7 +161,7 @@ const Users = () => {
           >
             <Button
               icon={<DeleteOutlined />}
-              style={{ color: '#ff4d4f', border: 'none', background: 'transparent' }}
+              style={{ color: "#dc3545" }}
             />
           </Popconfirm>
         </Space>
@@ -143,86 +171,68 @@ const Users = () => {
 
   return (
     <div>
-      <Space
-        style={{
-          marginBottom: 16,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-        }}
-      >
-        <Title level={2} style={{ margin: 0 }}>
-          Gestión de Usuarios
-        </Title>
-        <Input
-          placeholder="Buscar por nombre"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: 300 }}
-          prefix={<SearchOutlined style={{ color: '#bfbfbf' }} />}
-        />
-        <Select
-          placeholder="Filtrar por estado"
-          value={selectedEstado}
-          onChange={(value) => setSelectedEstado(value)}
-          style={{ width: 200 }}
-          allowClear
-        >
-          <Option value="Act">Activo</Option>
-          <Option value="Ina">Inactivo</Option>
-        </Select>
-        <Select
-          placeholder="Filtrar por rol"
-          value={selectedRol}
-          onChange={(value) => setSelectedRol(value)}
-          style={{ width: 200 }}
-          allowClear
-        >
-          <Option value="Doctor">Doctor</Option>
-          <Option value="Admin">Administrador</Option>
-          <Option value="Enfermera">Enfermera</Option>
-        </Select>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={() => setIsAddUserModalOpen(true)}
-        >
-          Agregar Usuario
-        </Button>
-      </Space>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 20 }}>
+        <h2>Gestión de Usuarios</h2>
+        <div style={{ display: "flex", gap: 10 }}>
+          <Search
+            placeholder="Buscar por nombre o cédula"
+            value={searchValue}
+            onChange={(e) => setSearchValue(e.target.value)}
+            style={{ width: 300 }}
+          />
+          <Select
+            placeholder="Filtrar por rol"
+            style={{ width: 200 }}
+            value={roleFilter}
+            onChange={(value) => setRoleFilter(value)}
+            allowClear
+          >
+            <Option value="Doctor">Doctor</Option>
+            <Option value="Administrador">Administrador</Option>
+            <Option value="Enfermera">Enfermera</Option>
+          </Select>
+          <Button type="primary" onClick={() => setIsAddModalOpen(true)}>
+            Agregar Usuario
+          </Button>
+        </div>
+      </div>
+
       <Table
         columns={columns}
-        dataSource={filteredUsers}
+        dataSource={paginatedUsers}
         rowKey="identificacion"
         pagination={{
-          pageSize: 6,
-          showSizeChanger: false,
+          current: currentPage,
+          pageSize: itemsPerPage,
+          total: filteredUsers.length,
+          onChange: handlePageChange,
         }}
       />
 
-      {isAddUserModalOpen && (
-        <AddUserForm
-          onClose={() => setIsAddUserModalOpen(false)}
-          onAdd={(user) => {
-            setUsers((prev) => [user, ...prev]);
-            setFilteredUsers((prev) => [user, ...prev]);
-          }}
-        />
+      {isAddModalOpen && (
+        <Modal
+          title="Agregar Usuario"
+          visible={isAddModalOpen}
+          onCancel={() => setIsAddModalOpen(false)}
+          footer={null}
+        >
+          <AddUserForm onClose={() => setIsAddModalOpen(false)} onAdd={handleAddUser} />
+        </Modal>
       )}
 
-      {isEditUserModalOpen && currentEditUser && (
-        <EditUserForm
-          onClose={() => setIsEditUserModalOpen(false)}
-          onUpdate={(user) => {
-            setUsers((prev) =>
-              prev.map((u) => (u.identificacion === user.identificacion ? user : u))
-            );
-            setFilteredUsers((prev) =>
-              prev.map((u) => (u.identificacion === user.identificacion ? user : u))
-            );
-          }}
-          initialData={currentEditUser}
-        />
+      {isEditModalOpen && currentEditUser && (
+        <Modal
+          title="Editar Usuario"
+          visible={isEditModalOpen}
+          onCancel={() => setIsEditModalOpen(false)}
+          footer={null}
+        >
+          <EditUserForm
+            onClose={() => setIsEditModalOpen(false)}
+            onUpdate={handleUpdateUser}
+            initialData={currentEditUser}
+          />
+        </Modal>
       )}
 
       {expandedUser && (

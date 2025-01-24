@@ -1,218 +1,252 @@
 import React, { useState } from "react";
-import {
-  Modal,
-  Form,
-  Input,
-  Button,
-  DatePicker,
-  Select,
-  Upload,
-  Tabs,
-  Row,
-  Col,
-  message,
-  notification,
-} from "antd";
-import { UploadOutlined } from "@ant-design/icons";
-
-const { TabPane } = Tabs;
-const { Option } = Select;
+import Modal from "../../../components/common/Modal";
+import Button from "../../../components/common/Button";
+import "../../../styles/modules/Administrador/user/addUserForm.css";
 
 const AddUserForm = ({ onClose, onAdd }) => {
-  const [form] = Form.useForm();
-  const [activeTab, setActiveTab] = useState("personal");
+  const [formData, setFormData] = useState({
+    identificacion: "",
+    correo: "",
+    contraseña: "",
+    nombres: "",
+    apellidos: "",
+    fechaNacimiento: "",
+    direccionDomicilio: "",
+    telefono: "",
+    sexo: "M",
+    estadoCivil: "Sol",
+    especialidad: "",
+    fotografia: null,
+    consultorio: "",
+    estado: "Act",
+    rol: "Doctor",
+  });
 
-  const handleSubmit = async () => {
+  const [errors, setErrors] = useState({});
+  const [activeTab, setActiveTab] = useState("personal"); 
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Blob = reader.result.split(",")[1];
+        setFormData({ ...formData, fotografia: base64Blob });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.identificacion) newErrors.identificacion = "La identificación es obligatoria.";
+    if (!formData.correo || !/\S+@\S+\.\S+/.test(formData.correo))
+      newErrors.correo = "El correo electrónico no es válido.";
+    if (!formData.contraseña || formData.contraseña.length < 6)
+      newErrors.contraseña = "La contraseña debe tener al menos 6 caracteres.";
+    if (!formData.nombres) newErrors.nombres = "Los nombres son obligatorios.";
+    if (!formData.apellidos) newErrors.apellidos = "Los apellidos son obligatorios.";
+    if (!formData.fechaNacimiento) newErrors.fechaNacimiento = "La fecha de nacimiento es obligatoria.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validateForm()) return;
+
     try {
-      const values = await form.validateFields();
-      if (values.fotografia) {
-        const file = values.fotografia.file;
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          const base64Blob = reader.result.split(",")[1];
-          values.fotografia = base64Blob;
-          onAdd(values);
-          notification.success({
-            message: "Usuario creado",
-            description: "El usuario ha sido creado exitosamente.",
-          });
-          onClose();
-        };
-        reader.readAsDataURL(file);
-      } else {
-        onAdd(values);
-        notification.success({
-          message: "Usuario creado",
-          description: "El usuario ha sido creado exitosamente.",
-        });
-        onClose();
-      }
+      await onAdd(formData);
+      onClose();
     } catch (error) {
-      message.error("Por favor, complete todos los campos requeridos.");
+      console.error("Error al agregar el usuario:", error);
+      setErrors({ general: "Ocurrió un error al agregar el usuario. Intente nuevamente." });
     }
   };
 
   return (
-    <Modal
-      title="Agregar Usuario"
-      visible
-      onCancel={onClose}
-      footer={null}
-    >
-      <Tabs activeKey={activeTab} onChange={setActiveTab} centered>
-        <TabPane tab="Información Personal" key="personal">
-          <Form
-            form={form}
-            layout="vertical"
-            initialValues={{
-              sexo: "M",
-              estadoCivil: "Sol",
-            }}
-          >
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  label="Identificación"
-                  name="identificacion"
-                  rules={[{ required: true, message: "La identificación es obligatoria." }]}
-                >
-                  <Input placeholder="Ingrese la identificación" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Correo"
-                  name="correo"
-                  rules={[{ required: true, type: "email", message: "El correo no es válido." }]}
-                >
-                  <Input placeholder="Ingrese el correo" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Contraseña"
-                  name="contraseña"
-                  rules={[{ required: true, min: 6, message: "La contraseña debe tener al menos 6 caracteres." }]}
-                >
-                  <Input.Password placeholder="Ingrese la contraseña" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Nombres"
-                  name="nombres"
-                  rules={[{ required: true, message: "Los nombres son obligatorios." }]}
-                >
-                  <Input placeholder="Ingrese los nombres" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Apellidos"
-                  name="apellidos"
-                  rules={[{ required: true, message: "Los apellidos son obligatorios." }]}
-                >
-                  <Input placeholder="Ingrese los apellidos" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  label="Fecha de Nacimiento"
-                  name="fechaNacimiento"
-                  rules={[{ required: true, message: "La fecha de nacimiento es obligatoria." }]}
-                >
-                  <DatePicker style={{ width: "100%" }} placeholder="Seleccione la fecha" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Sexo" name="sexo">
-                  <Select>
-                    <Option value="M">Masculino</Option>
-                    <Option value="F">Femenino</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Estado Civil" name="estadoCivil">
-                  <Select>
-                    <Option value="Sol">Soltero</Option>
-                    <Option value="Cas">Casado</Option>
-                    <Option value="Div">Divorciado</Option>
-                    <Option value="Viudo">Viudo</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </TabPane>
-
-        <TabPane tab="Contacto" key="contact">
-          <Form form={form} layout="vertical">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="Dirección" name="direccionDomicilio">
-                  <Input placeholder="Ingrese la dirección" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Teléfono" name="telefono">
-                  <Input placeholder="Ingrese el teléfono" />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </TabPane>
-
-        <TabPane tab="Información Profesional" key="professional">
-          <Form form={form} layout="vertical">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item label="Especialidad" name="especialidad">
-                  <Input placeholder="Ingrese la especialidad" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Fotografía" name="fotografia">
-                  <Upload beforeUpload={() => false} maxCount={1}>
-                    <Button icon={<UploadOutlined />}>Subir Fotografía</Button>
-                  </Upload>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Consultorio" name="consultorio">
-                  <Input placeholder="Ingrese el consultorio" />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Estado" name="estado">
-                  <Select>
-                    <Option value="Act">Activo</Option>
-                    <Option value="Ina">Inactivo</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item label="Rol" name="rol">
-                  <Select>
-                    <Option value="Doctor">Doctor</Option>
-                    <Option value="Admin">Administrador</Option>
-                    <Option value="Enfermera">Enfermera</Option>
-                  </Select>
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form>
-        </TabPane>
-      </Tabs>
-
-      <div style={{ textAlign: "right", marginTop: 16 }}>
-        <Button onClick={onClose} style={{ marginRight: 8 }}>
-          Cancelar
-        </Button>
-        <Button type="primary" onClick={handleSubmit}>
-          Agregar Usuario
-        </Button>
+    <Modal onClose={onClose}>
+      <h2>Agregar Usuario</h2>
+      <div className="tabs">
+        <button
+          className={activeTab === "personal" ? "active" : ""}
+          onClick={() => setActiveTab("personal")}
+        >
+          Información Personal
+        </button>
+        <button
+          className={activeTab === "contact" ? "active" : ""}
+          onClick={() => setActiveTab("contact")}
+        >
+          Contacto
+        </button>
+        <button
+          className={activeTab === "professional" ? "active" : ""}
+          onClick={() => setActiveTab("professional")}
+        >
+          Información Profesional
+        </button>
       </div>
+
+      <form className="add-user-form" onSubmit={handleSubmit}>
+        {activeTab === "personal" && (
+          <div className="form-section">
+            <h3>Información Personal</h3>
+            <div className="form-group">
+              <label>Identificación</label>
+              <input
+                type="text"
+                name="identificacion"
+                value={formData.identificacion}
+                onChange={handleInputChange}
+              />
+              {errors.identificacion && <span className="error">{errors.identificacion}</span>}
+            </div>
+            <div className="form-group">
+              <label>Correo</label>
+              <input
+                type="email"
+                name="correo"
+                value={formData.correo}
+                onChange={handleInputChange}
+              />
+              {errors.correo && <span className="error">{errors.correo}</span>}
+            </div>
+            <div className="form-group">
+              <label>Contraseña</label>
+              <input
+                type="password"
+                name="contraseña"
+                value={formData.contraseña}
+                onChange={handleInputChange}
+              />
+              {errors.contraseña && <span className="error">{errors.contraseña}</span>}
+            </div>
+            <div className="form-group">
+              <label>Nombres</label>
+              <input
+                type="text"
+                name="nombres"
+                value={formData.nombres}
+                onChange={handleInputChange}
+              />
+              {errors.nombres && <span className="error">{errors.nombres}</span>}
+            </div>
+            <div className="form-group">
+              <label>Apellidos</label>
+              <input
+                type="text"
+                name="apellidos"
+                value={formData.apellidos}
+                onChange={handleInputChange}
+              />
+              {errors.apellidos && <span className="error">{errors.apellidos}</span>}
+            </div>
+            <div className="form-group">
+              <label>Fecha de Nacimiento</label>
+              <input
+                type="date"
+                name="fechaNacimiento"
+                value={formData.fechaNacimiento}
+                onChange={handleInputChange}
+              />
+              {errors.fechaNacimiento && <span className="error">{errors.fechaNacimiento}</span>}
+            </div>
+            <div className="form-group">
+              <label>Sexo</label>
+              <select name="sexo" value={formData.sexo} onChange={handleInputChange}>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Estado Civil</label>
+              <select name="estadoCivil" value={formData.estadoCivil} onChange={handleInputChange}>
+                <option value="Sol">Soltero</option>
+                <option value="Cas">Casado</option>
+                <option value="Div">Divorciado</option>
+                <option value="Viudo">Viudo</option>
+              </select>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "contact" && (
+          <div className="form-section">
+            <h3>Contacto</h3>
+            <div className="form-group">
+              <label>Dirección</label>
+              <input
+                type="text"
+                name="direccionDomicilio"
+                value={formData.direccionDomicilio}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>Teléfono</label>
+              <input
+                type="text"
+                name="telefono"
+                value={formData.telefono}
+                onChange={handleInputChange}
+              />
+            </div>
+          </div>
+        )}
+
+        {activeTab === "professional" && (
+          <div className="form-section">
+            <h3>Información Profesional</h3>
+            <div className="form-group">
+              <label>Especialidad</label>
+              <input
+                type="text"
+                name="especialidad"
+                value={formData.especialidad}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>Fotografía</label>
+              <input type="file" accept="image/*" onChange={handleImageChange} />
+            </div>
+            <div className="form-group">
+              <label>Consultorio</label>
+              <input
+                type="text"
+                name="consultorio"
+                value={formData.consultorio}
+                onChange={handleInputChange}
+              />
+            </div>
+            <div className="form-group">
+              <label>Estado</label>
+              <select name="estado" value={formData.estado} onChange={handleInputChange}>
+                <option value="Act">Activo</option>
+                <option value="Ina">Inactivo</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>Rol</label>
+              <select name="rol" value={formData.rol} onChange={handleInputChange}>
+                <option value="Doctor">Doctor</option>
+                <option value="Admin">Administrador</option>
+                <option value="Enfermera">Enfermera</option>
+              </select>
+            </div>
+            <div className="form-actions">
+              <Button type="submit" label="Agregar Usuario" className="primary" />
+            </div>
+          </div>
+        )}
+      </form>
     </Modal>
   );
 };
