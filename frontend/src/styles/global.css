@@ -1,0 +1,26 @@
+/* Estilos globales */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f9;
+  }
+  .actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 1rem;
+    background: #ffffff; /* Añadido para asegurarse de que el fondo sea visible al hacer scroll */
+    position: sticky; /* Para que el título se mueva con el scroll */
+    top: 0; /* Para que se adhiera a la parte superior cuando se hace scroll */
+    z-index: 100; /* Asegura que esté por encima del contenido */
+  }
+
+  h2 {
+    color: #333;
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
