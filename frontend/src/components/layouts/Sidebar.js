@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Layout, Menu, Button } from "antd";
 import { AiOutlineLogout } from "react-icons/ai";
-import "../../styles/layouts/sidebar.css";
+
 
 const { Sider } = Layout;
 const { SubMenu } = Menu;

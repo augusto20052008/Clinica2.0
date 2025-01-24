@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import { Form, Input, Button, Row, Col, Typography } from "antd";
+import { Form, Input, Button, Row, Col } from "antd";
 import { SaveOutlined, CloseOutlined } from "@ant-design/icons";
 import { createEstablecimiento } from "../../../../../utils/api";
-
-const { Title } = Typography;
 
 function AddEstablecimiento({ onClose, onRefresh }) {
   const [formData, setFormData] = useState({
@@ -14,11 +12,6 @@ function AddEstablecimiento({ onClose, onRefresh }) {
     codigoCantonUO: "",
     codigoProvinciaUO: "",
   });
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
 
   const handleSubmit = async (values) => {
     try {

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input, Form, Button, Modal, notification } from "antd";
+import { Input, Form, Button, notification } from "antd";
 import { SaveOutlined, CloseOutlined } from "@ant-design/icons";
 import { updateEstablecimiento } from "../../../../../utils/api"; // Asegúrate de definir esta función en api.js
 
