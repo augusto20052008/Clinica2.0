@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { Table, Button, Input, Modal, Typography, Space, Popconfirm, notification, Select } from "antd";
+import { Table, Button, Input, Modal, Space, Popconfirm, notification, Select } from "antd";
 import { EditOutlined, DeleteOutlined } from "@ant-design/icons";
 import { fetchEstablecimientos, deleteEstablecimiento } from "../../../../../utils/api";
 import AddEstablecimiento from "./AddEstablecimiento";
 import EditEstablecimiento from "./EditEstablecimiento";
 
-const { Title } = Typography;
+
 const { Option } = Select;
 
 function Establecimiento() {
   const [establecimientos, setEstablecimientos] = useState([]);
   const [filteredEstablecimientos, setFilteredEstablecimientos] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSistema, setSelectedSistema] = useState(""); // Estado para el filtro de sistema
+  const [selectedSistema, setSelectedSistema] = useState("");
   const [isModalOpen, setModalOpen] = useState(false);
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [currentEstablecimiento, setCurrentEstablecimiento] = useState(null);
@@ -33,7 +33,7 @@ function Establecimiento() {
   useEffect(() => {
     const filteredData = establecimientos.filter((item) =>
       (item.nombreEstablecimiento.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (selectedSistema ? item.institucionSistema === selectedSistema : true) // Filtrar por sistema seleccionado
+      (selectedSistema ? item.institucionSistema === selectedSistema : true)
     );
     setFilteredEstablecimientos(filteredData);
   }, [searchQuery, selectedSistema, establecimientos]);
@@ -104,34 +104,37 @@ function Establecimiento() {
 
   return (
     <div>
-      <Space style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <Title level={2} style={{ margin: 0 }}>Gestión de Establecimientos</Title>
-        <Input
-          placeholder="Buscar por nombre"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          style={{ width: "300px" }}
-        />
-        <Select
-          placeholder="Filtrar por sistema"
-          value={selectedSistema}
-          onChange={(value) => setSelectedSistema(value)}
-          style={{ width: 250 }}
-        >
-          <Option value="">Todos</Option>
-          {sistemas.map((sistema) => (
-            <Option key={sistema} value={sistema}>
-              {sistema}
-            </Option>
-          ))}
-        </Select>
-        <Button
-          type="primary"
-          onClick={() => setModalOpen(true)}
-        >
-          Agregar Establecimiento
-        </Button>
-      </Space>
+      <div style={{ marginBottom: "16px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Gestión de Establecimientos</h2>
+        <div style={{ display: "flex", gap: "16px", alignItems: "center" }}>
+          <Input
+            placeholder="Buscar por nombre"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ width: "300px" }}
+          />
+          <Select
+            placeholder="Filtrar por sistema"
+            value={selectedSistema}
+            onChange={(value) => setSelectedSistema(value)}
+            style={{ width: 250 }}
+          >
+            <Option value="">Todos</Option>
+            {sistemas.map((sistema) => (
+              <Option key={sistema} value={sistema}>
+                {sistema}
+              </Option>
+            ))}
+          </Select>
+          <Button
+            type="primary"
+            onClick={() => setModalOpen(true)}
+          >
+            Agregar Establecimiento
+          </Button>
+        </div>
+      </div>
+
       <Table columns={columns} dataSource={filteredEstablecimientos} rowKey="idEstablecimiento" />
       <Modal
         title="Agregar Establecimiento"
