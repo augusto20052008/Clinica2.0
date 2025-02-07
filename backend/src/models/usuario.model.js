@@ -1,156 +1,89 @@
-const pool = require('../config/db');
+const db = require('../config/db');
 
-
-async function findAllUsuarios() {
-  const query = 'SELECT * FROM Usuario';
-  const [rows] = await pool.query(query);
-  return rows;
+async function obtenerTodos() {
+    const query = 'SELECT * FROM usuario';
+    const [rows] = await db.query(query);
+    return rows;
 }
 
-async function findUsuarioById(identificacion) {
-  const query = 'SELECT * FROM Usuario WHERE identificacion = ?';
-  const [rows] = await pool.query(query, [identificacion]);
-  return rows[0] || null;
+async function obtenerPorId(id) {
+    const query = 'SELECT * FROM usuario WHERE id_usuario = ?';
+    const [rows] = await db.query(query, [id]);
+    if (rows.length) {
+        return rows[0];
+    }
+    return null;
 }
 
-async function findByCorreo(correo) {
-  const query = 'SELECT * FROM Usuario WHERE correo = ?';
-  const [rows] = await pool.query(query, [correo]);
-  return rows[0] || null;
-}
-
-async function createUsuario(usuarioData) {
-  const {
-    identificacion,
-    correo,
-    contraseña,
-    nombres,
-    apellidos,
-    fechaNacimiento,
-    direccionDomicilio,
-    telefono,
-    sexo,
-    estadoCivil,
-    especialidad,
-    fotografia,
-    consultorio,
-    estado,
-    rol,
-  } = usuarioData;
-
-  const query = `
-    INSERT INTO Usuario
-    (
-      identificacion,
-      correo,
-      contraseña,
-      nombres,
-      apellidos,
-      fechaNacimiento,
-      direccionDomicilio,
-      telefono,
-      sexo,
-      estadoCivil,
-      especialidad,
-      fotografia,
-      consultorio,
-      estado,
-      rol
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+async function crear(data) {
+    const query = `
+    INSERT INTO usuario (usuario, correo, contraseña, id_rol)
+    VALUES (?, ?, ?, ?)
   `;
-  const values = [
-    identificacion,
-    correo,
-    contraseña,
-    nombres,
-    apellidos,
-    fechaNacimiento,
-    direccionDomicilio,
-    telefono,
-    sexo,
-    estadoCivil,
-    especialidad || null,
-    fotografia || null,
-    consultorio || null,
-    estado,
-    rol,
-  ];
+    const { usuario, correo, contraseña, id_rol, estado } = data;
 
-  const [result] = await pool.query(query, values);
-  return result.insertId || identificacion;
+    const [result] = await db.query(query, [
+        usuario,
+        correo,
+        contraseña,
+        id_rol,
+        estado
+    ]);
+
+    return {
+        id_usuario: result.insertId,
+        ...data,
+    };
 }
 
-async function updateUsuario(identificacion, usuarioData) {
-  const {
-    correo,
-    contraseña,
-    nombres,
-    apellidos,
-    fechaNacimiento,
-    direccionDomicilio,
-    telefono,
-    sexo,
-    estadoCivil,
-    especialidad,
-    fotografia,
-    consultorio,
-    estado,
-    rol,
-  } = usuarioData;
-
-  const query = `
-    UPDATE Usuario
-    SET
-      correo = ?,
-      contraseña = ?,
-      nombres = ?,
-      apellidos = ?,
-      fechaNacimiento = ?,
-      direccionDomicilio = ?,
-      telefono = ?,
-      sexo = ?,
-      estadoCivil = ?,
-      especialidad = ?,
-      fotografia = ?,
-      consultorio = ?,
-      estado = ?,
-      rol = ?
-    WHERE identificacion = ?
+async function actualizar(id, data) {
+    const query = `
+    UPDATE usuario
+    SET usuario = ?,
+        correo = ?,
+        contraseña = ?,
+        id_rol = ?,
+        estado = ?
+    WHERE id_usuario = ?
   `;
-  const values = [
-    correo,
-    contraseña,
-    nombres,
-    apellidos,
-    fechaNacimiento,
-    direccionDomicilio,
-    telefono,
-    sexo,
-    estadoCivil,
-    especialidad,
-    fotografia || null,
-    consultorio || null,
-    estado,
-    rol,
-    identificacion,
-  ];
 
-  const [result] = await pool.query(query, values);
-  return result.affectedRows; // 1 si se actualizó, 0 si no existía
+    const {
+        usuario,
+        correo,
+        contraseña,
+        id_rol,
+        estado
+    } = data;
+
+    await db.query(query, [
+        usuario,
+        correo,
+        contraseña,
+        id_rol,
+        estado,
+        id
+    ]);
+
+    return { id_usuario: id, ...data };
 }
 
-async function deleteUsuario(identificacion) {
-  const query = 'DELETE FROM Usuario WHERE identificacion = ?';
-  const [result] = await pool.query(query, [identificacion]);
-  return result.affectedRows; // 1 si se eliminó, 0 si no existía
+async function eliminar(id) {
+    const query = 'DELETE FROM usuario WHERE id_usuario = ?';
+    await db.query(query, [id]);
+    return true;
+}
+
+async function darBaja(id) {
+    const query = `UPDATE usuario SET estado = 'inactivo' WHERE id_usuario = ?`;
+    await db.query(query, [id]);
+    return true
 }
 
 module.exports = {
-  findAllUsuarios,
-  findUsuarioById,
-  findByCorreo,
-  createUsuario,
-  updateUsuario,
-  deleteUsuario,
+    obtenerTodos,
+    obtenerPorId,
+    crear,
+    actualizar,
+    eliminar,
+    darBaja
 };

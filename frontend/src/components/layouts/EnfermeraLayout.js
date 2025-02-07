@@ -1,71 +1,44 @@
 import React from "react";
-import { Layout, Avatar } from "antd";
+import { Layout } from "antd";
 import Sidebar from "./Sidebar";
+import CustomHeader from "./Header"; 
 import {
   DashboardOutlined,
   UserOutlined,
   FileTextOutlined,
 } from "@ant-design/icons";
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
 function EnfermeraLayout({ children }) {
+  console.log("Renderizando EnfermeraLayout...");
+
+  // Definir enlaces del sidebar para enfermeras
   const nurseLinks = [
-    {
-      label: "Dashboard",
-      to: "/enfermera/dashboard",
-      icon: <DashboardOutlined />, 
-    },
-    {
-      label: "Pacientes",
-      to: "/enfermera/pacientes",
-      icon: <UserOutlined />, 
-      subMenu: [
-        { label: "Referidos", to: "/enfermera/pacientes/referidoEnfermera" },
-      ],
-    },
-    {
-      label: "Historias Clínicas",
-      to: "/enfermera/historias",
-      icon: <FileTextOutlined />, 
-      subMenu: [
-        { label: "Formulario", to: "/enfermera/historias/formulariosEnfermera" },
-      ],
-    },
+    { label: "Dashboard", to: "/enfermera/dashboard", icon: <DashboardOutlined /> },
+    { label: "Pacientes", to: "/enfermera/pacientes", icon: <UserOutlined /> },
+    { label: "Historias Clínicas", to: "/enfermera/historias", icon: <FileTextOutlined /> },
+    { label: "Formulario", to: "/enfermera/historias/formulariosEnfermera", icon: <FileTextOutlined /> },
   ];
 
+  // Manejo de logout
   const handleLogout = () => {
     console.log("Cerrando sesión de la enfermera...");
+    localStorage.clear();
+    window.location.href = "/";
   };
 
   return (
     <Layout style={{ minHeight: "100vh" }}>
-      {/* Sidebar con onLogout */}
+      {/* Sidebar */}
       <Sidebar links={nurseLinks} onLogout={handleLogout} />
-
-      {/* Área principal */}
       <Layout>
-        <Header
-          style={{
-            background: "#001529",
-            padding: "0 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ color: "white" }}>Bienvenida, Enfermera</div>
-          <Avatar src="https://via.placeholder.com/40" size="large" />
-        </Header>
+        {/* Header personalizado */}
+        <CustomHeader username="Enfermera" profilePic="https://via.placeholder.com/40" />
 
-        <Content
-          style={{
-            margin: "16px",
-            padding: "16px",
-            background: "#fff",
-          }}
-        >
-          {children}
+        {/* Contenido principal */}
+        <Content style={{ margin: "16px", padding: "16px", background: "#fff" }}>
+          {children ? children : <h2 style={{ color: "red" }}>Error al cargar contenido</h2>}
         </Content>
       </Layout>
     </Layout>

@@ -1,50 +1,41 @@
 import React from "react";
-import { Layout, Avatar } from "antd";
+import { Layout } from "antd";
 import Sidebar from "./Sidebar"; // Asegúrate de que esta sea la ruta correcta
+import CustomHeader from "./Header"; // Importa el CustomHeader
 import {
   DashboardOutlined,
   UserOutlined,
   TeamOutlined,
-  ToolOutlined,
   BookOutlined,
 } from "@ant-design/icons";
 
-const { Header, Content } = Layout;
+const { Content } = Layout;
 
 function AdminLayout({ children }) {
   const adminLinks = [
     {
       label: "Dashboard",
       to: "/admin/dashboard",
-      icon: <DashboardOutlined />,
+      icon: <DashboardOutlined />, // Icono para Dashboard
     },
     {
       label: "Usuarios",
       to: "/admin/users",
-      icon: <UserOutlined />,
+      icon: <UserOutlined />, // Icono para Usuarios
       subMenu: [
         { label: "Firma Electrónica", to: "/admin/users/firma-electronica" },
-        { label: "Jornada", to: "/admin/users/jornada" },
-        { label: "Título", to: "/admin/users/titulo" },
       ],
     },
     {
       label: "Pacientes",
       to: "/admin/patients",
-      icon: <TeamOutlined />,
-      subMenu: [{ label: "Referidos", to: "/admin/patients/referido" }],
-    },
-    {
-      label: "Solicitudes de Cambio",
-      to: "/admin/change",
-      icon: <ToolOutlined />,
+      icon: <TeamOutlined />, // Icono para Pacientes
     },
     {
       label: "Historia Clínica",
       to: "/admin/historia-clinica",
       icon: <BookOutlined />,
       subMenu: [
-        { label: "Establecimiento", to: "/admin/historia-clinica/establecimiento" },
         { label: "Plantillas", to: "/admin/historia-clinica/plantillas" },
         { label: "Formularios", to: "/admin/historia-clinica/formularios" },
       ],
@@ -63,18 +54,8 @@ function AdminLayout({ children }) {
 
       {/* Área principal */}
       <Layout>
-        <Header
-          style={{
-            background: "#001529",
-            padding: "0 16px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          <div style={{ color: "white" }}>Bienvenido, Administrador</div>
-          <Avatar src="https://via.placeholder.com/40" size="large" />
-        </Header>
+        {/* Reemplazamos el Header por CustomHeader */}
+        <CustomHeader username="Administrador" profilePic="https://via.placeholder.com/40" />
 
         <Content
           style={{

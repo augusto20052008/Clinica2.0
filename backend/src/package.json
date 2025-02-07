@@ -1,5 +1,5 @@
 {
-  "name": "Servidor",
+  "name": "Server Clinica San Jose",
   "version": "1.0.0",
   "description": "Servidor con apis",
   "main": "app.js",
@@ -8,6 +8,7 @@
     "dev": "nodemon app.js"
   },
   "dependencies": {
+    "bcrypt": "^5.1.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",

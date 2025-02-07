@@ -1,372 +1,308 @@
-import React from 'react';
+import React from "react";
+import {
+  Layout,
+  Row,
+  Col,
+  Card,
+  Statistic,
+  List,
+  Typography,
+  Tag,
+  Switch,
+  Button,
+  Table,
+} from "antd";
+import {
+  UserOutlined,
+  FileDoneOutlined,
+  AlertOutlined,
+  CheckCircleOutlined,
+  ClockCircleOutlined,
+  SearchOutlined,
+  EditOutlined,
+} from "@ant-design/icons";
 
-// 1. Datos estáticos (hardcodeados)
-const pacientesAsignados = [
+// ======= DATOS =======
+const pacientesRecientes = [
   {
     id: 1,
-    nombre: 'María González',
+    nombre: "María González",
     edad: 45,
-    habitacion: '201-A',
-    estado: 'Crítico',
-    temperatura: '38.5°C ↑',
-    presion: '140/90',
-    alergias: ['Alérgica a penicilina', 'Diabética'],
-    proximaRevision: '15:30',
-    medicacionPendiente: true
+    habitacion: "201-A",
+    estado: "Crítico",
+    temperatura: "38.5°C ↑",
+    presion: "140/90",
+    alergias: ["Alérgica a penicilina", "Diabética"],
+    proximaRevision: "15:30",
+    medicacionPendiente: true,
   },
   {
     id: 2,
-    nombre: 'María González',
+    nombre: "María González",
     edad: 45,
-    habitacion: '201-A',
-    estado: 'Crítico',
-    temperatura: '38.5°C ↑',
-    presion: '140/90',
-    alergias: ['Alérgica a penicilina', 'Diabética'],
-    proximaRevision: '15:30',
-    medicacionPendiente: true
-  }
+    habitacion: "201-A",
+    estado: "Crítico",
+    temperatura: "38.5°C ↑",
+    presion: "140/90",
+    alergias: ["Alérgica a penicilina", "Diabética"],
+    proximaRevision: "15:30",
+    medicacionPendiente: true,
+  },
 ];
 
 const tareasDelDia = [
   {
     id: 1,
-    hora: '08:00',
-    paciente: 'Luis Morales',
-    habitacion: '201',
-    accion: 'Administrar medicamento',
-    prioridad: 'Alta'
+    hora: "08:00",
+    paciente: "Luis Morales",
+    habitacion: "201",
+    accion: "Administrar medicamento",
+    prioridad: "Alta",
   },
   {
     id: 2,
-    hora: '08:30',
-    paciente: 'Luis Morales',
-    habitacion: '201',
-    accion: 'Administrar medicamento',
-    prioridad: 'Media'
+    hora: "08:30",
+    paciente: "Luis Morales",
+    habitacion: "201",
+    accion: "Administrar medicamento",
+    prioridad: "Media",
   },
   {
     id: 3,
-    hora: '09:00',
-    paciente: 'Ana López',
-    habitacion: '105-B',
-    accion: 'Curar herida',
-    prioridad: 'Alta'
-  }
+    hora: "09:00",
+    paciente: "Ana López",
+    habitacion: "105-B",
+    accion: "Curar herida",
+    prioridad: "Alta",
+  },
 ];
 
-const notificaciones = [
-  { id: 1, emisor: 'Enf. Daniela Ordoñez', mensaje: 'Las pastillas del paciente Augusto lo dejaron en coma', hora: '11:30 AM' },
-  { id: 2, emisor: 'Enf. Daniela Ordoñez', mensaje: 'Las pastillas del paciente Augusto lo dejaron en coma', hora: '11:30 AM' },
-  { id: 3, emisor: 'Enf. Daniela Ordoñez', mensaje: 'Las pastillas del paciente Augusto lo dejaron en coma', hora: '11:30 AM' },
-  { id: 4, emisor: 'Enf. Daniela Ordoñez', mensaje: 'Las pastillas del paciente Augusto lo dejaron en coma', hora: '11:30 AM' }
-];
-
-// 2. Estilos “inline” para un look suave y profesional
-const containerStyle = {
-  minHeight: '100vh',
-  backgroundColor: '#f7f9fc',
-  padding: '30px 40px',
-  fontFamily: 'Segoe UI, Tahoma, sans-serif',
-  color: '#333'
-};
-
-const statsRowStyle = {
-  display: 'flex',
-  gap: '15px',
-  marginBottom: '20px',
-  flexWrap: 'wrap'
-};
-
-const statCardStyle = {
-  flex: '1 1 160px',
-  backgroundColor: '#fff',
-  borderRadius: '10px',
-  padding: '15px',
-  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
-  textAlign: 'center',
-  minWidth: '170px'
-};
-
-const statTitleStyle = {
-  fontSize: '14px',
-  color: '#666'
-};
-
-const statNumberStyle = {
-  fontSize: '22px',
-  fontWeight: 'bold',
-  marginTop: '8px'
-};
-
-const mainContentStyle = {
-  display: 'flex',
-  gap: '20px',
-  flexWrap: 'wrap'
-};
-
-const leftColumnStyle = {
-  flex: '1 1 600px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '20px'
-};
-
-const rightColumnStyle = {
-  width: '260px',
-  flexShrink: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '20px'
-};
-
-const boxStyle = {
-  backgroundColor: '#fff',
-  borderRadius: '10px',
-  padding: '16px',
-  boxShadow: '0 2px 6px rgba(0,0,0,0.05)'
-};
-
-const titleStyle = {
-  marginBottom: '12px',
-  fontWeight: '600',
-  fontSize: '16px'
-};
-
-// Cards de paciente asignado
-const patientCardStyle = {
-  backgroundColor: '#f2f9f2',
-  borderRadius: '8px',
-  padding: '12px',
-  marginBottom: '10px',
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'flex-start'
-};
-
-const criticalBadgeStyle = {
-  backgroundColor: '#ff6b6b',
-  color: '#fff',
-  padding: '3px 6px',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontWeight: 'bold',
-  marginRight: '6px'
-};
-
-const infoRightStyle = {
-  textAlign: 'right',
-  fontSize: '12px',
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px'
-};
-
-const subTextStyle = {
-  fontSize: '13px',
-  color: '#777'
-};
-
-// Tareas del día
-const tableHeaderStyle = {
-  display: 'grid',
-  gridTemplateColumns: '40px 80px 1fr 1fr',
-  fontWeight: '600',
-  marginBottom: '8px',
-  fontSize: '14px'
-};
-
-const tableRowStyle = {
-  display: 'grid',
-  gridTemplateColumns: '40px 80px 1fr 1fr',
-  alignItems: 'center',
-  marginBottom: '8px',
-  borderRadius: '6px',
-  backgroundColor: '#fafbfc',
-  padding: '8px'
-};
-
-const priorityBadgeStyle = (priority) => {
-  let colorBg = '#c7ffd0';
-  let colorText = '#2e7d32';
-  if (priority === 'Alta') {
-    colorBg = '#ffdbdb';
-    colorText = '#d32f2f';
-  } else if (priority === 'Media') {
-    colorBg = '#fff6cf';
-    colorText = '#8c6f06';
-  }
-
-  return {
-    backgroundColor: colorBg,
-    color: colorText,
-    padding: '3px 8px',
-    borderRadius: '8px',
-    fontSize: '12px',
-    fontWeight: 'bold',
-    justifySelf: 'flex-start'
-  };
-};
-
-// Botones
-const greenButtonStyle = {
-  backgroundColor: '#41b619',
-  color: '#fff',
-  border: 'none',
-  borderRadius: '8px',
-  padding: '14px 20px',
-  fontWeight: '600',
-  cursor: 'pointer',
-  width: '100%',
-  marginBottom: '12px',
-  textAlign: 'center',
-  fontSize: '14px'
-};
+// ======= COMPONENTES & ESTILOS =======
+const { Content } = Layout;
+const { Title, Text } = Typography;
 
 const DashboardEnfermera = () => {
+  // Columnas para mostrar “tareasDelDia” en una tabla de Ant Design
+  const tareasColumns = [
+    {
+      title: "",
+      dataIndex: "completada",
+      key: "completada",
+      render: (_, record) => <input type="checkbox" />,
+      width: 50,
+    },
+    {
+      title: "Hora",
+      dataIndex: "hora",
+      key: "hora",
+      width: 80,
+    },
+    {
+      title: "Paciente",
+      dataIndex: "paciente",
+      key: "paciente",
+      render: (text, record) => (
+        <>
+          <Text strong>{text}</Text>
+          <br />
+          <Text type="secondary">Habitación {record.habitacion}</Text>
+        </>
+      ),
+    },
+    {
+      title: "Acción",
+      dataIndex: "accion",
+      key: "accion",
+      render: (text, record) => {
+        // Etiquetas de prioridad
+        let colorBg = "green";
+        let colorText = "#fff";
+        if (record.prioridad === "Alta") {
+          colorBg = "red";
+          colorText = "#fff";
+        } else if (record.prioridad === "Media") {
+          colorBg = "orange";
+          colorText = "#fff";
+        }
+        return (
+          <>
+            <Text>{text}</Text>
+            <br />
+            <Tag color={colorBg} style={{ color: colorText }}>
+              Prioridad {record.prioridad}
+            </Tag>
+          </>
+        );
+      },
+    },
+  ];
+
   return (
-    <div style={containerStyle}>
-
-      {/* Filas de estadísticas (arriba) */}
-      <div style={statsRowStyle}>
-        <div style={statCardStyle}>
-          <div style={statTitleStyle}>Total de Pacientes</div>
-          <div style={statNumberStyle}>8/12</div>
-        </div>
-        <div style={statCardStyle}>
-          <div style={statTitleStyle}>Tareas Completadas</div>
-          <div style={statNumberStyle}>12/18</div>
-        </div>
-        <div style={statCardStyle}>
-          <div style={statTitleStyle}>Alertas</div>
-          <div style={statNumberStyle}>3</div>
-        </div>
-      </div>
-
-      {/* Contenido principal (2 columnas) */}
-      <div style={mainContentStyle}>
-
-        {/* Columna Izquierda */}
-        <div style={leftColumnStyle}>
-
-          {/* Pacientes asignados */}
-          <div style={boxStyle}>
-            <h3 style={titleStyle}>Pacientes asignados</h3>
-            {pacientesAsignados.map((pac) => (
-              <div key={pac.id} style={patientCardStyle}>
-                <div>
-                  <strong style={{ fontSize: '15px' }}>{pac.nombre}</strong><br />
-                  <span style={{ fontSize: '13px', color: '#666' }}>
-                    {pac.edad} años - Hab. {pac.habitacion}
-                  </span>
-                </div>
-
-                <div style={infoRightStyle}>
-                  <div>
-                    {pac.estado === 'Crítico' && (
-                      <span style={criticalBadgeStyle}>{pac.estado}</span>
-                    )}
-                    <span style={{ color: '#d9534f', marginRight: '5px' }}>
-                      {pac.temperatura}
-                    </span>
-                    <span>{pac.presion}</span>
-                  </div>
-                  {/* Alergias */}
-                  <div>
-                    {pac.alergias.map((al, idx) => (
-                      <span key={idx} style={{ marginRight: '5px' }}>
-                        ⚠ {al}
-                      </span>
-                    ))}
-                  </div>
-                  {/* Próxima revisión */}
-                  <div style={subTextStyle}>
-                    Próx. revisión: {pac.proximaRevision}
-                    {pac.medicacionPendiente && ' | Medicación pendiente'}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Tareas del Día */}
-          <div style={boxStyle}>
-            <h3 style={titleStyle}>Tareas del Día</h3>
-            {/* Encabezado tipo tabla */}
-            <div style={tableHeaderStyle}>
-              <span></span>
-              <span>Hora</span>
-              <span>Paciente</span>
-              <span>Acción</span>
-            </div>
-            {tareasDelDia.map((task) => (
-              <div key={task.id} style={tableRowStyle}>
-                <input type="checkbox" />
-                <span>{task.hora}</span>
-                <div>
-                  {task.paciente}<br />
-                  <small style={{ color: '#777' }}>Habitación {task.habitacion}</small>
-                </div>
-                <div>
-                  {task.accion}<br />
-                  <span style={priorityBadgeStyle(task.prioridad)}>
-                    Prioridad {task.prioridad}
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Columna Derecha */}
-        <div style={rightColumnStyle}>
-
-          {/* Botones */}
-          <button style={greenButtonStyle}>Buscar Paciente</button>
-          <button style={greenButtonStyle}>Signos Vitales</button>
-
-          {/* Turno */}
-          <div style={boxStyle}>
-            <h4 style={{ marginBottom: '12px', fontWeight: '600' }}>Turno</h4>
-            <div style={{ fontSize: '14px', marginBottom: '8px' }}>
-              <strong>Estado:</strong>{' '}
-              <span style={{ color: '#aaa' }}>Fuera de Consulta</span>{' '}
-              <input
-                type="checkbox"
-                style={{ marginLeft: '8px' }}
-                onChange={() => {}}
+    <Layout style={{ minHeight: "100vh", backgroundColor: "#f0f2f5" }}>
+      {/* SIN HEADER, DIRECTO AL CONTENT */}
+      <Content style={{ padding: 20 }}>
+        {/* FILA SUPERIOR: ESTADÍSTICAS (3 o 4) */}
+        <Row gutter={[16, 16]}>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Pacientes Totales"
+                value={32}
+                prefix={<UserOutlined />}
               />
-            </div>
-            <div style={{ fontSize: '14px', marginBottom: '8px' }}>
-              <strong>Información</strong>
-              <div style={{ marginTop: '4px' }}>
-                <span>Mañana: 8:00 AM - 2:00 PM</span> &nbsp;|&nbsp; 
-                <span>Tarde: 8:00 AM - 2:00 PM</span>
-              </div>
-            </div>
-            <div style={{ fontSize: '14px' }}>
-              <strong>Detalles del Turno</strong>
-              <div style={{ marginTop: '4px' }}>Horario: 8:00 AM - 2:00 PM</div>
-              <div>Citas Programadas: 12</div>
-            </div>
-          </div>
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Pacientes Recientes"
+                value={8}
+                prefix={<CheckCircleOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic
+                title="Tareas de Hoy"
+                value={15}
+                prefix={<FileDoneOutlined />}
+              />
+            </Card>
+          </Col>
+          <Col xs={12} sm={6}>
+            <Card>
+              <Statistic title="Alertas" value={2} prefix={<AlertOutlined />} />
+            </Card>
+          </Col>
+        </Row>
 
-          {/* Notificaciones */}
-          <div style={boxStyle}>
-            <h4 style={{ marginBottom: '12px', fontWeight: '600' }}>Notificaciones</h4>
-            {notificaciones.map((n) => (
-              <div key={n.id} style={{ marginBottom: '10px', fontSize: '13px', lineHeight: '1.4' }}>
-                <strong>{n.emisor}</strong><br />
-                {n.mensaje}{' '}
-                <span style={{ color: '#999', fontSize: '12px' }}>
-                  ({n.hora})
-                </span>
+        {/* FILA PRINCIPAL: 2 COLUMNAS */}
+        <Row gutter={[16, 16]} style={{ marginTop: 16 }}>
+          {/* COLUMNA IZQUIERDA: PACIENTES RECIENTES + TAREAS */}
+          <Col xs={24} md={16}>
+            {/* PACIENTES RECIENTES */}
+            <Card
+              title="Pacientes Recientes"
+              style={{ marginBottom: 16 }}
+              bodyStyle={{ padding: 0 }}
+            >
+              <List
+                itemLayout="vertical"
+                dataSource={pacientesRecientes}
+                renderItem={(pac) => (
+                  <List.Item style={{ padding: "16px" }}>
+                    <Row justify="space-between" align="middle">
+                      <Col>
+                        <Title level={5} style={{ marginBottom: 4 }}>
+                          {pac.nombre}{" "}
+                          <Text type="secondary" style={{ fontSize: 14 }}>
+                            ({pac.edad} años)
+                          </Text>
+                        </Title>
+                        <Text type="secondary">
+                          Hab. {pac.habitacion}
+                        </Text>
+                      </Col>
+                      <Col style={{ textAlign: "right" }}>
+                        {pac.estado === "Crítico" && (
+                          <Tag color="error">{pac.estado}</Tag>
+                        )}
+                        {pac.estado === "Estable" && (
+                          <Tag color="warning">{pac.estado}</Tag>
+                        )}
+                        <br />
+                        <Text>
+                          {pac.temperatura} | {pac.presion}
+                        </Text>
+                        <br />
+                        <Text type="secondary" style={{ fontSize: 12 }}>
+                          Próx. revisión: {pac.proximaRevision}
+                        </Text>
+                        {pac.medicacionPendiente && (
+                          <div style={{ color: "red", fontSize: 12 }}>
+                            Medicación pendiente
+                          </div>
+                        )}
+                        <div style={{ marginTop: 4 }}>
+                          {pac.alergias.map((al, idx) => (
+                            <Tag color="volcano" key={idx} style={{ marginTop: 4 }}>
+                              ⚠ {al}
+                            </Tag>
+                          ))}
+                        </div>
+                      </Col>
+                    </Row>
+                  </List.Item>
+                )}
+              />
+            </Card>
+
+            {/* TAREAS DEL DÍA */}
+            <Card title="Tareas del Día">
+              <Table
+                dataSource={tareasDelDia}
+                columns={tareasColumns}
+                rowKey="id"
+                pagination={false}
+              />
+            </Card>
+          </Col>
+
+          {/* COLUMNA DERECHA: TURNO + BOTONES */}
+          <Col xs={24} md={8}>
+            {/* BOTONES GRANDES */}
+            <Card style={{ marginBottom: 16 }}>
+              <Button
+                type="primary"
+                icon={<SearchOutlined />}
+                block
+                style={{ marginBottom: 8 }}
+              >
+                Buscar Paciente
+              </Button>
+              <Button icon={<EditOutlined />} block style={{ marginBottom: 8 }}>
+                Signos Vitales
+              </Button>
+            </Card>
+
+            {/* TURNO */}
+            <Card
+              title={
+                <>
+                  <ClockCircleOutlined style={{ marginRight: 8 }} />
+                  Turno
+                </>
+              }
+            >
+              <div style={{ marginBottom: 12 }}>
+                <Text strong>Estado: </Text>
+                <Text type="secondary" style={{ marginRight: 8 }}>
+                  Fuera de Consulta
+                </Text>
+                <Switch defaultChecked={false} />
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
+              <div style={{ marginBottom: 8 }}>
+                <Text strong>Información:</Text>
+                <br />
+                <Text type="secondary" style={{ fontSize: 13 }}>
+                  Mañana: 8:00 AM - 2:00 PM | Tarde: 8:00 AM - 2:00 PM
+                </Text>
+              </div>
+              <div>
+                <Text strong>Detalles del Turno:</Text>
+                <div style={{ marginTop: 4 }}>
+                  <Text>Horario: 8:00 AM - 2:00 PM</Text>
+                </div>
+                <div>
+                  <Text>Citas Programadas: 12</Text>
+                </div>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </Content>
+    </Layout>
   );
 };
 

@@ -1,21 +1,25 @@
-const { Router } = require('express');
-const { getUsuarios, getUsuario, postUsuario, putUsuario, deleteUsuarioById } = require('../controllers/usuario.controller');
+const express = require('express');
+const router = express.Router();
 
-const router = Router();
+const usuarioController = require('../controllers/usuario.controller');
+const authMiddleware = require('../middleware/auth.middleware');
 
-// GET /user -> Obtener todos
-router.get('/', getUsuarios);
+// GET: Obtener todos los usuarios
+router.get('/', authMiddleware, usuarioController.obtenerUsuarios);
 
-// GET /user/:identificacion -> Obtener uno
-router.get('/:identificacion', getUsuario);
+// GET: Obtener un usuario por ID
+router.get('/:id_usuario', authMiddleware, usuarioController.obtenerUsuarioPorId);
 
-// POST /user/ -> Crear nuevo
-router.post('/', postUsuario);
+// POST: Crear un nuevo usuario
+router.post('/', authMiddleware, usuarioController.crearUsuario);
 
-// PUT /user/:identificacion -> Actualizar
-router.put('/:identificacion', putUsuario);
+// PUT: Actualizar un usuario
+router.put('/:id_usuario', authMiddleware, usuarioController.actualizarUsuario);
 
-// DELETE /user/:identificacion -> Eliminar
-router.delete('/:identificacion', deleteUsuarioById);
+// DELETE: Eliminar un usuario
+router.delete('/:id_usuario', authMiddleware, usuarioController.eliminarUsuario);
+
+// BAJA: Dar de baja un usuario
+router.delete('/baja/:id_usuario', authMiddleware, usuarioController.darBajaUsuario);
 
 module.exports = router;

@@ -1,114 +1,134 @@
-const { findAllPacientes, findPacienteById, createPaciente, updatePaciente, deletePaciente, } = require('../models/paciente.model');
+const pacienteModel = require('../models/paciente.model');
 
-async function getPacientes(req, res) {
+exports.obtenerPacientes = async (req, res) => {
     try {
-        const pacientes = await findAllPacientes();
-        return res.json({
-            success: true,
-            data: pacientes,
-        });
+        const pacientes = await pacienteModel.obtenerTodos();
+        return res.json(pacientes);
     } catch (error) {
-        console.error('Error en getPacientes:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor',
-        });
+        console.error('Error al obtener pacientes:', error);
+        return res.status(500).json({ message: 'Error al obtener pacientes' });
     }
-}
+};
 
-async function getPaciente(req, res) {
+exports.obtenerPacientePorId = async (req, res) => {
+    const { nro_identificacion } = req.params;
     try {
-        const { identificacion } = req.params;
-        const paciente = await findPacienteById(identificacion);
+        const paciente = await pacienteModel.obtenerPorId(nro_identificacion);
         if (!paciente) {
-            return res.status(404).json({
-                success: false,
-                message: 'Paciente no encontrado',
+            return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+        return res.json(paciente);
+    } catch (error) {
+        console.error('Error al obtener paciente:', error);
+        return res.status(500).json({ message: 'Error al obtener paciente' });
+    }
+};
+
+exports.crearPaciente = async (req, res) => {
+    try {
+        const {
+            nro_identificacion,
+            tipo_identificacion,
+            primer_nombre,
+            segundo_nombre,
+            primer_apellido,
+            segundo_apellido,
+            genero,
+            fecha_nacimiento
+        } = req.body;
+
+        if (
+            !nro_identificacion ||
+            !tipo_identificacion ||
+            !primer_nombre ||
+            !primer_apellido ||
+            !segundo_apellido ||
+            !genero ||
+            !fecha_nacimiento
+        ) {
+            return res.status(400).json({
+                message: 'Faltan campos obligatorios (revisa la identificación, nombres, apellidos, género y fecha de nacimiento)'
             });
         }
-        return res.json({
-            success: true,
-            data: paciente,
+
+        const nuevoPaciente = await pacienteModel.crear({
+            nro_identificacion,
+            tipo_identificacion,
+            primer_nombre,
+            segundo_nombre: segundo_nombre || '',
+            primer_apellido,
+            segundo_apellido,
+            genero,
+            fecha_nacimiento
         });
+
+        return res.status(201).json(nuevoPaciente);
     } catch (error) {
-        console.error('Error en getPaciente:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor',
-        });
+        console.error('Error al crear paciente:', error);
+        return res.status(500).json({ message: 'Error al crear paciente' });
     }
-}
+};
 
-async function postPaciente(req, res) {
+exports.actualizarPaciente = async (req, res) => {
+    const { nro_identificacion } = req.params;
     try {
-        const newPacienteData = req.body;
-        const insertedId = await createPaciente(newPacienteData);
-        return res.status(201).json({
-            success: true,
-            message: 'Paciente creado exitosamente',
-            data: { identificacion: insertedId },
-        });
-    } catch (error) {
-        console.error('Error en postPaciente:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor',
-        });
-    }
-}
+        const {
+            tipo_identificacion,
+            primer_nombre,
+            segundo_nombre,
+            primer_apellido,
+            segundo_apellido,
+            genero,
+            fecha_nacimiento
+        } = req.body;
 
-async function putPaciente(req, res) {
-    try {
-        const { identificacion } = req.params;
-        const updatedData = req.body;
-
-        const rowsAffected = await updatePaciente(identificacion, updatedData);
-        if (rowsAffected === 0) {
-            return res.status(404).json({
-                success: false,
-                message: `No se pudo actualizar. El paciente con ID ${identificacion} no fue encontrado.`,
+        if (
+            !tipo_identificacion ||
+            !primer_nombre ||
+            !primer_apellido ||
+            !segundo_apellido ||
+            !genero ||
+            !fecha_nacimiento
+        ) {
+            return res.status(400).json({
+                message: 'Faltan campos obligatorios para actualizar (tipo_identificacion, nombres, apellidos, género, fecha_nacimiento)'
             });
         }
-        return res.json({
-            success: true,
-            message: 'Paciente actualizado exitosamente',
-        });
-    } catch (error) {
-        console.error('Error en putPaciente:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor',
-        });
-    }
-}
 
-async function deletePacienteById(req, res) {
-    try {
-        const { identificacion } = req.params;
-        const rowsAffected = await deletePaciente(identificacion);
-        if (rowsAffected === 0) {
-            return res.status(404).json({
-                success: false,
-                message: `No se pudo eliminar. Paciente con ID ${identificacion} no encontrado.`,
-            });
+        const pacienteExistente = await pacienteModel.obtenerPorId(nro_identificacion);
+        if (!pacienteExistente) {
+            return res.status(404).json({ message: 'Paciente no encontrado' });
         }
-        return res.json({
-            success: true,
-            message: 'Paciente eliminado exitosamente',
-        });
-    } catch (error) {
-        console.error('Error en deletePacienteById:', error);
-        return res.status(500).json({
-            success: false,
-            message: 'Error interno del servidor',
-        });
-    }
-}
 
-module.exports = {
-    getPacientes,
-    getPaciente,
-    postPaciente,
-    putPaciente,
-    deletePacienteById,
+        const pacienteActualizado = await pacienteModel.actualizar(nro_identificacion, {
+            tipo_identificacion,
+            primer_nombre,
+            segundo_nombre: segundo_nombre || '',
+            primer_apellido,
+            segundo_apellido,
+            genero,
+            fecha_nacimiento
+        });
+
+        return res.json(pacienteActualizado);
+    } catch (error) {
+        console.error('Error al actualizar paciente:', error);
+        return res.status(500).json({ message: 'Error al actualizar paciente' });
+    }
+};
+
+exports.eliminarPaciente = async (req, res) => {
+    const { nro_identificacion } = req.params;
+    try {
+        const paciente = await pacienteModel.obtenerPorId(nro_identificacion);
+        if (!paciente) {
+            return res.status(404).json({ message: 'Paciente no encontrado' });
+        }
+
+        await pacienteModel.eliminar(nro_identificacion);
+        return res.json({ message: 'Paciente eliminado correctamente' });
+    } catch (error) {
+        console.error('Error al eliminar paciente:', error);
+        return res.status(500).json({ message: 'Error al eliminar paciente' });
+    }
 };

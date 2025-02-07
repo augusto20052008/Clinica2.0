@@ -1,51 +1,50 @@
-import React, { useEffect, useState } from "react";
-import Modal from "../../../components/common/Modal";
-import { fetchHistoriaById } from "../../../utils/api";
+import React from "react";
+import { Modal, Typography, Row, Col } from "antd";
+import { IdcardOutlined, CalendarOutlined, FileOutlined } from "@ant-design/icons";
 
-function HistoriaClinicaProfile({ idHistoriaClinica, pacienteIdentificacion, onClose }) {
-  const [historia, setHistoria] = useState(null);
+const { Title, Text } = Typography;
 
-  useEffect(() => {
-    const loadHistoria = async () => {
-      try {
-        const data = await fetchHistoriaById(idHistoriaClinica, pacienteIdentificacion);
-        setHistoria(data);
-      } catch (error) {
-        console.error("Error al cargar la historia clínica:", error);
-        alert("Error al cargar la historia clínica.");
-        onClose();
-      }
-    };
+const HistoriaClinicaProfile = ({ visible, onClose, historia }) => {
+    if (!historia) return null;
 
-    loadHistoria();
-  }, [idHistoriaClinica, pacienteIdentificacion, onClose]);
-
-  if (!historia) {
-    return <div>Cargando datos...</div>;
-  }
-
-  return (
-    <Modal onClose={onClose}>
-      <h2>Detalles de la Historia Clínica</h2>
-      <div>
-        <p>
-          <strong>ID de la Historia:</strong> {historia.idHistoriaClinica}
-        </p>
-        <p>
-          <strong>Número de Historia:</strong> {historia.nroHistoriaClinica}
-        </p>
-        <p>
-          <strong>Fecha de Creación:</strong> {historia.fechaCreacionHC}
-        </p>
-        <p>
-          <strong>Fecha de Última Edición:</strong> {historia.fechaUltimaEdicion}
-        </p>
-        <p>
-          <strong>Identificación del Paciente:</strong> {historia.Paciente_identificacion}
-        </p>
-      </div>
-    </Modal>
-  );
-}
+    return (
+        <Modal
+            title={
+                <Row align="middle">
+                    <FileOutlined style={{ marginRight: 8 }} />
+                    <Title level={4} style={{ margin: 0 }}>
+                        Detalles de la Historia Clínica
+                    </Title>
+                </Row>
+            }
+            visible={visible}
+            onCancel={onClose}
+            footer={null}
+        >
+            <Row gutter={[16, 16]}>
+                <Col span={12}>
+                    <Text strong>
+                        <IdcardOutlined /> Número de Archivo:
+                    </Text>
+                    <p>{historia.nro_archivo}</p>
+                </Col>
+                <Col span={12}>
+                    <Text strong>
+                        <IdcardOutlined /> Identificación del Paciente:
+                    </Text>
+                    <p>{historia.nro_identificacion}</p>
+                </Col>
+            </Row>
+            <Row gutter={[16, 16]}>
+                <Col span={24}>
+                    <Text strong>
+                        <CalendarOutlined /> Fecha de Creación:
+                    </Text>
+                    <p>{new Date(historia.fecha_creacion).toLocaleString()}</p>
+                </Col>
+            </Row>
+        </Modal>
+    );
+};
 
 export default HistoriaClinicaProfile;

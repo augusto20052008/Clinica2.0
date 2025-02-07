@@ -1,225 +1,104 @@
-const pool = require('../config/db');
+const db = require('../config/db');
 
-async function findAllPacientes() {
-    const query = 'SELECT * FROM Paciente';
-    const [rows] = await pool.query(query);
+async function obtenerTodos() {
+    const query = 'SELECT * FROM paciente';
+    const [rows] = await db.query(query);
     return rows;
 }
 
-async function findPacienteById(identificacion) {
-    const query = `
-    SELECT *
-    FROM Paciente
-    WHERE identificacion = ?
-  `;
-    const [rows] = await pool.query(query, [identificacion]);
-    return rows[0] || null;
+async function obtenerPorId(nroIdentificacion) {
+    const query = 'SELECT * FROM paciente WHERE nro_identificacion = ?';
+    const [rows] = await db.query(query, [nroIdentificacion]);
+    return rows.length ? rows[0] : null;
 }
 
-async function createPaciente(pacienteData) {
-    const {
-        identificacion,
-        apellidoParteno,
-        apellidoMaterno,
-        primerNombre,
-        segundoNombre,
-        barrio,
-        parroquia,
-        canton,
-        provincia,
-        zona,
-        telefonoPaciente,
-        fechaNacimiento,
-        lugarNacimiento,
-        nacionalidad,
-        grupoCultural,
-        sexo,
-        estadoCivil,
-        instruccionUltimoAnioAprov,
-        direccionPaciente,
-        correo,
-        fechaCreacion,
-        ocupacion,
-        empresaTrabajo,
-        tipoSeguroSalud,
-        alergias,
-        grupoSanguineo,
-        observaciones,
-    } = pacienteData;
-
+async function crear(data) {
     const query = `
-    INSERT INTO Paciente (
-      identificacion,
-      apellidoParteno,
-      apellidoMaterno,
-      primerNombre,
-      segundoNombre,
-      barrio,
-      parroquia,
-      canton,
-      provincia,
-      zona,
-      telefonoPaciente,
-      fechaNacimiento,
-      lugarNacimiento,
-      nacionalidad,
-      grupoCultural,
-      sexo,
-      estadoCivil,
-      instruccionUltimoAnioAprov,
-      direccionPaciente,
-      correo,
-      fechaCreacion,
-      ocupacion,
-      empresaTrabajo,
-      tipoSeguroSalud,
-      alergias,
-      grupoSanguineo,
-      observaciones
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO paciente (
+      nro_identificacion,
+      tipo_identificacion,
+      primer_nombre,
+      segundo_nombre,
+      primer_apellido,
+      segundo_apellido,
+      genero,
+      fecha_nacimiento
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-    const values = [
-        identificacion,
-        apellidoParteno || null,
-        apellidoMaterno || null,
-        primerNombre || null,
-        segundoNombre || null,
-        barrio || null,
-        parroquia || null,
-        canton || null,
-        provincia || null,
-        zona || null,
-        telefonoPaciente || null,
-        fechaNacimiento || null,
-        lugarNacimiento || null,
-        nacionalidad || null,
-        grupoCultural || null,
-        sexo || null,
-        estadoCivil || null,
-        instruccionUltimoAnioAprov || null,
-        direccionPaciente || null,
-        correo || null,
-        fechaCreacion || null,
-        ocupacion || null,
-        empresaTrabajo || null,
-        tipoSeguroSalud || null,
-        alergias || null,
-        grupoSanguineo || null,
-        observaciones || null,
-    ];
+    const {
+        nro_identificacion,
+        tipo_identificacion,
+        primer_nombre,
+        segundo_nombre,
+        primer_apellido,
+        segundo_apellido,
+        genero,
+        fecha_nacimiento
+    } = data;
 
-    const [result] = await pool.query(query, values);
-    return identificacion;
+    await db.query(query, [
+        nro_identificacion,
+        tipo_identificacion,
+        primer_nombre,
+        segundo_nombre,
+        primer_apellido,
+        segundo_apellido,
+        genero,
+        fecha_nacimiento
+    ]);
+
+    return { ...data };
 }
 
-async function updatePaciente(identificacion, pacienteData) {
-    const {
-        apellidoParteno,
-        apellidoMaterno,
-        primerNombre,
-        segundoNombre,
-        barrio,
-        parroquia,
-        canton,
-        provincia,
-        zona,
-        telefonoPaciente,
-        fechaNacimiento,
-        lugarNacimiento,
-        nacionalidad,
-        grupoCultural,
-        sexo,
-        estadoCivil,
-        instruccionUltimoAnioAprov,
-        direccionPaciente,
-        correo,
-        ocupacion,
-        empresaTrabajo,
-        tipoSeguroSalud,
-        alergias,
-        grupoSanguineo,
-        observaciones,
-    } = pacienteData;
-
+async function actualizar(nroIdentificacion, data) {
     const query = `
-    UPDATE Paciente
+    UPDATE paciente
     SET
-      apellidoParteno = ?,
-      apellidoMaterno = ?,
-      primerNombre = ?,
-      segundoNombre = ?,
-      barrio = ?,
-      parroquia = ?,
-      canton = ?,
-      provincia = ?,
-      zona = ?,
-      telefonoPaciente = ?,
-      fechaNacimiento = ?,
-      lugarNacimiento = ?,
-      nacionalidad = ?,
-      grupoCultural = ?,
-      sexo = ?,
-      estadoCivil = ?,
-      instruccionUltimoAnioAprov = ?,
-      direccionPaciente = ?,
-      correo = ?,
-      ocupacion = ?,
-      empresaTrabajo = ?,
-      tipoSeguroSalud = ?,
-      alergias = ?,
-      grupoSanguineo = ?,
-      observaciones = ?
-    WHERE identificacion = ?
+      tipo_identificacion = ?,
+      primer_nombre = ?,
+      segundo_nombre = ?,
+      primer_apellido = ?,
+      segundo_apellido = ?,
+      genero = ?,
+      fecha_nacimiento = ?
+    WHERE nro_identificacion = ?
   `;
 
-    const values = [
-        apellidoParteno || null,
-        apellidoMaterno || null,
-        primerNombre || null,
-        segundoNombre || null,
-        barrio || null,
-        parroquia || null,
-        canton || null,
-        provincia || null,
-        zona || null,
-        telefonoPaciente || null,
-        fechaNacimiento || null,
-        lugarNacimiento || null,
-        nacionalidad || null,
-        grupoCultural || null,
-        sexo || null,
-        estadoCivil || null,
-        instruccionUltimoAnioAprov || null,
-        direccionPaciente || null,
-        correo || null,
-        ocupacion || null,
-        empresaTrabajo || null,
-        tipoSeguroSalud || null,
-        alergias || null,
-        grupoSanguineo || null,
-        observaciones || null,
-        identificacion,
-    ];
+    const {
+        tipo_identificacion,
+        primer_nombre,
+        segundo_nombre,
+        primer_apellido,
+        segundo_apellido,
+        genero,
+        fecha_nacimiento
+    } = data;
 
-    const [result] = await pool.query(query, values);
-    return result.affectedRows; // 1 si se actualizó, 0 si no existía
+    await db.query(query, [
+        tipo_identificacion,
+        primer_nombre,
+        segundo_nombre,
+        primer_apellido,
+        segundo_apellido,
+        genero,
+        fecha_nacimiento,
+        nroIdentificacion
+    ]);
+
+    return { nro_identificacion: nroIdentificacion, ...data };
 }
 
-async function deletePaciente(identificacion) {
-    const query = `
-    DELETE FROM Paciente
-    WHERE identificacion = ?
-  `;
-    const [result] = await pool.query(query, [identificacion]);
-    return result.affectedRows; // 1 si se eliminó, 0 si no existía
+async function eliminar(nroIdentificacion) {
+    const query = 'DELETE FROM paciente WHERE nro_identificacion = ?';
+    await db.query(query, [nroIdentificacion]);
+    return true;
 }
 
 module.exports = {
-    findAllPacientes,
-    findPacienteById,
-    createPaciente,
-    updatePaciente,
-    deletePaciente,
+    obtenerTodos,
+    obtenerPorId,
+    crear,
+    actualizar,
+    eliminar
 };

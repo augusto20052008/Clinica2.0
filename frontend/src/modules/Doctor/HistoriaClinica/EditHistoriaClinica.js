@@ -1,97 +1,110 @@
-import React, { useState } from "react";
-import Button from "../../../components/common/Button";
-import { updateHistoria } from "../../../utils/api";
+import React, { useState, useEffect } from "react";
+import { Modal, Form, Select, Button, notification } from "antd";
+import { EditOutlined } from "@ant-design/icons";
+import { fetchPatients, updateHistoriaClinica } from "../../../utils/api";
 
-function EditHistoriaClinica({ onClose, onRefresh, historia }) {
-  const [formData, setFormData] = useState({
-    idHistoriaClinica: historia.idHistoriaClinica || "",
-    nroHistoriaClinica: historia.nroHistoriaClinica || "",
-    fechaCreacionHC: historia.fechaCreacionHC || "",
-    fechaUltimaEdicion: new Date().toISOString().split("T")[0], // Fecha actual como valor por defecto
-    Paciente_identificacion: historia.Paciente_identificacion || "",
-  });
+const { Option } = Select;
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+const EditHistoriaClinica = ({ visible, onClose, historia, onHistoriaUpdated }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
+
+  useEffect(() => {
+    const loadPatients = async () => {
+      try {
+        const data = await fetchPatients();
+        setPatients(data);
+        setFilteredPatients(data);
+      } catch (error) {
+        console.error("Error al cargar pacientes:", error);
+        notification.error({
+          message: "Error",
+          description: "No se pudo cargar la lista de pacientes.",
+        });
+      }
+    };
+
+    loadPatients();
+
+    if (historia) {
+      form.setFieldsValue({
+        nro_identificacion: historia.nro_identificacion,
+      });
+    }
+  }, [historia, form]);
+
+  const handleSearch = (value) => {
+    const filtered = patients.filter(
+      (patient) =>
+        patient.nro_identificacion.includes(value) &&
+        !patients.some((p) => p.nro_identificacion === value)
+    );
+    setFilteredPatients(filtered);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleSubmit = async (values) => {
+    setLoading(true);
     try {
-      await updateHistoria(historia.idHistoriaClinica, historia.Paciente_identificacion, formData);
-      alert("Historia clínica actualizada exitosamente");
-      onRefresh();
+      await updateHistoriaClinica(historia.nro_archivo, values);
+      notification.success({
+        message: "Historia clínica actualizada",
+        description: "La historia clínica se ha actualizado exitosamente.",
+      });
+      onHistoriaUpdated();
       onClose();
     } catch (error) {
       console.error("Error al actualizar historia clínica:", error);
-      alert("Error al actualizar historia clínica");
+      notification.error({
+        message: "Error",
+        description: "No se pudo actualizar la historia clínica.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div>
-      <h2>Editar Historia Clínica</h2>
-      <form onSubmit={handleSubmit}>
-        <div className="form-group">
-          <label htmlFor="idHistoriaClinica">ID de la Historia Clínica:</label>
-          <input
-            type="text"
-            name="idHistoriaClinica"
-            id="idHistoriaClinica"
-            value={formData.idHistoriaClinica}
-            readOnly
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="nroHistoriaClinica">Número de Historia Clínica:</label>
-          <input
-            type="text"
-            name="nroHistoriaClinica"
-            id="nroHistoriaClinica"
-            value={formData.nroHistoriaClinica}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="fechaCreacionHC">Fecha de Creación:</label>
-          <input
-            type="date"
-            name="fechaCreacionHC"
-            id="fechaCreacionHC"
-            value={formData.fechaCreacionHC}
-            readOnly
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="fechaUltimaEdicion">Fecha de Última Edición:</label>
-          <input
-            type="date"
-            name="fechaUltimaEdicion"
-            id="fechaUltimaEdicion"
-            value={formData.fechaUltimaEdicion}
-            onChange={handleChange}
-            required
-          />
-        </div>
-        <div className="form-group">
-          <label htmlFor="Paciente_identificacion">Identificación del Paciente:</label>
-          <input
-            type="text"
-            name="Paciente_identificacion"
-            id="Paciente_identificacion"
-            value={formData.Paciente_identificacion}
-            readOnly
-          />
-        </div>
-        <div className="form-buttons">
-          <Button type="submit" label="Guardar" />
-          <Button type="button" label="Cancelar" onClick={onClose} />
-        </div>
-      </form>
-    </div>
+    <Modal
+      title="Editar Historia Clínica"
+      visible={visible}
+      onCancel={onClose}
+      footer={null}
+    >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
+        <Form.Item
+          name="nro_identificacion"
+          label="Identificación del Paciente"
+          rules={[{ required: true, message: "Este campo es obligatorio." }]}
+        >
+          <Select
+            showSearch
+            placeholder="Buscar pacientes"
+            onSearch={handleSearch}
+            filterOption={false}
+          >
+            {filteredPatients.map((patient) => (
+              <Option key={patient.nro_identificacion} value={patient.nro_identificacion}>
+                {`${patient.nro_identificacion} - ${patient.primer_nombre} ${patient.primer_apellido}`}
+              </Option>
+            ))}
+          </Select>
+        </Form.Item>
+        <Form.Item>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={loading}
+            icon={<EditOutlined />}
+            block
+          >
+            Guardar Cambios
+          </Button>
+        </Form.Item>
+      </Form>
+    </Modal>
   );
-}
+};
 
 export default EditHistoriaClinica;

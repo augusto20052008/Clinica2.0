@@ -1,163 +1,215 @@
-import React, { useState, useEffect } from "react";
-import { Table, Button, Input, Modal, notification, Popconfirm, Space } from "antd";
-import { EditOutlined, DeleteOutlined, EyeOutlined } from "@ant-design/icons";
+import React, { useState, useEffect, useCallback } from "react";
+import { Table, Button, Input, Space, Popconfirm, notification, DatePicker, Typography } from "antd";
+import { PlusOutlined, EyeOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { fetchHistoriaClinica, deleteHistoriaClinica } from "../../../../utils/api";
 import AddHistoriaClinica from "./AddHistoriaClinica";
 import EditHistoriaClinica from "./EditHistoriaClinica";
 import HistoriaClinicaProfile from "./HistoriaClinicaProfile";
-import { fetchHistorias, deleteHistoria } from "../../../../utils/api";
+import dayjs from "dayjs";
+import advancedFormat from "dayjs/plugin/advancedFormat";
 
+dayjs.extend(advancedFormat);
+
+const { Title } = Typography;
 const { Search } = Input;
+const { RangePicker } = DatePicker;
 
-function HistoriaClinica() {
+const HistoriaClinica = () => {
   const [historias, setHistorias] = useState([]);
   const [filteredHistorias, setFilteredHistorias] = useState([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [isAddModalOpen, setAddModalOpen] = useState(false);
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [isViewModalOpen, setViewModalOpen] = useState(false);
-  const [currentHistoria, setCurrentHistoria] = useState(null);
+  const [searchValue, setSearchValue] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [editingHistoria, setEditingHistoria] = useState(null);
+  const [viewingHistoria, setViewingHistoria] = useState(null);
+  const [dateRange, setDateRange] = useState(null);
+  const [sortRecent, setSortRecent] = useState(false);
+  const itemsPerPage = 6; // Cambiado a 6 elementos por página
 
   useEffect(() => {
     loadHistorias();
   }, []);
 
-  useEffect(() => {
-    const filteredData = historias.filter((historia) =>
-      historia.Paciente_identificacion.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-    setFilteredHistorias(filteredData);
-  }, [searchQuery, historias]);
-
   const loadHistorias = async () => {
     try {
-      const data = await fetchHistorias();
+      const data = await fetchHistoriaClinica();
       setHistorias(data);
       setFilteredHistorias(data);
     } catch (error) {
       console.error("Error al cargar historias clínicas:", error);
+      notification.error({
+        message: "Error",
+        description: "No se pudo cargar la lista de historias clínicas.",
+      });
     }
   };
 
-  const handleDelete = async (idHistoriaClinica, pacienteIdentificacion) => {
-    const confirmDelete = window.confirm("¿Estás seguro de que deseas eliminar esta historia clínica?");
-    if (!confirmDelete) return;
+  const handleSearch = useCallback(() => {
+    let filtered = historias;
+  
+    // Filtrar por búsqueda
+    if (searchValue) {
+      filtered = filtered.filter((historia) =>
+        historia.nro_identificacion.toLowerCase().includes(searchValue.toLowerCase())
+      );
+    }
+  
+    // Filtrar por rango de fechas
+    if (dateRange) {
+      const [start, end] = dateRange;
+      filtered = filtered.filter((historia) => {
+        const fecha = dayjs(historia.fecha_creacion);
+        return fecha.isAfter(start) && fecha.isBefore(end);
+      });
+    }
+  
+    // Ordenar por los más recientes o antiguos
+    filtered = [...filtered].sort((a, b) =>
+      sortRecent
+        ? new Date(b.fecha_creacion) - new Date(a.fecha_creacion) // Más recientes primero
+        : new Date(a.fecha_creacion) - new Date(b.fecha_creacion) // Más antiguos primero
+    );
+  
+    setFilteredHistorias(filtered);
+    setCurrentPage(1); // Reiniciar a la primera página
+  }, [historias, searchValue, dateRange, sortRecent]);
+  
+  useEffect(() => {
+    handleSearch();
+  }, [searchValue, dateRange, sortRecent, handleSearch]);
 
+  const handleDelete = async (nroArchivo) => {
     try {
-      await deleteHistoria(idHistoriaClinica, pacienteIdentificacion);
+      await deleteHistoriaClinica(nroArchivo);
       notification.success({
-        message: "Éxito",
-        description: "Historia clínica eliminada exitosamente.",
+        message: "Historia clínica eliminada",
+        description: `La historia clínica con número ${nroArchivo} fue eliminada correctamente.`,
       });
       loadHistorias();
     } catch (error) {
       console.error("Error al eliminar historia clínica:", error);
       notification.error({
         message: "Error",
-        description: error.message || "Error al eliminar historia clínica.",
+        description: "No se pudo eliminar la historia clínica.",
       });
     }
   };
 
-  const handleEdit = (historia) => {
-    setCurrentHistoria(historia);
-    setEditModalOpen(true);
-  };
-
-  const handleView = (historia) => {
-    setCurrentHistoria(historia);
-    setViewModalOpen(true);
-  };
-
   const columns = [
-    { title: "Número Historia Clínica", dataIndex: "nroHistoriaClinica", key: "nroHistoriaClinica" },
-    { title: "Paciente Identificación", dataIndex: "Paciente_identificacion", key: "Paciente_identificacion" },
-    { title: "Fecha de Creación", dataIndex: "fechaCreacionHC", key: "fechaCreacionHC" },
-    { title: "Última Edición", dataIndex: "fechaUltimaEdicion", key: "fechaUltimaEdicion" },
+    {
+      title: "Número de Archivo",
+      dataIndex: "nro_archivo",
+      key: "nro_archivo",
+      render: (text) => text.toString().padStart(6, "0"),
+    },
+    {
+      title: "Identificación del Paciente",
+      dataIndex: "nro_identificacion",
+      key: "nro_identificacion",
+    },
+    {
+      title: "Fecha de Creación",
+      dataIndex: "fecha_creacion",
+      key: "fecha_creacion",
+      render: (text) => dayjs(text).format("dddd, MMMM D, YYYY, h:mm:ss A"),
+    },
     {
       title: "Acciones",
       key: "acciones",
-      render: (text, record) => (
+      render: (_, record) => (
         <Space size="middle">
           <Button
             icon={<EyeOutlined />}
-            onClick={() => handleView(record)}
-            style={{ color: "#1890ff" }}
+            onClick={() => {
+              setViewingHistoria(record);
+              setIsProfileModalOpen(true);
+            }}
           />
           <Button
             icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-            style={{ color: "#ffc107" }}
+            onClick={() => {
+              setEditingHistoria(record);
+              setIsEditModalOpen(true);
+            }}
           />
           <Popconfirm
             title="¿Estás seguro de eliminar esta historia clínica?"
-            onConfirm={() => handleDelete(record.idHistoriaClinica, record.Paciente_identificacion)}
+            onConfirm={() => handleDelete(record.nro_archivo)}
             okText="Sí"
             cancelText="No"
           >
-            <Button
-              icon={<DeleteOutlined />}
-              style={{ color: "#dc3545" }}
-            />
+            <Button icon={<DeleteOutlined />} danger />
           </Popconfirm>
         </Space>
       ),
     },
   ];
 
+  const paginatedData = filteredHistorias.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <div>
-      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-        <h2>Gestión de Historias Clínicas</h2>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <Search
-            placeholder="Buscar por identificación del paciente"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ width: 300 }}
-          />
-          <Button type="primary" onClick={() => setAddModalOpen(true)}>
-            Agregar Historia Clínica
-          </Button>
-        </div>
-      </div>
-
-      <Table columns={columns} dataSource={filteredHistorias} rowKey="idHistoriaClinica" />
-
-      {isAddModalOpen && (
-        <Modal
-          title="Agregar Historia Clínica"
-          visible={isAddModalOpen}
-          onCancel={() => setAddModalOpen(false)}
-          footer={null}
-        >
-          <AddHistoriaClinica onClose={() => setAddModalOpen(false)} onRefresh={loadHistorias} />
-        </Modal>
-      )}
-
-      {isEditModalOpen && currentHistoria && (
-        <Modal
-          title="Editar Historia Clínica"
-          visible={isEditModalOpen}
-          onCancel={() => setEditModalOpen(false)}
-          footer={null}
-        >
-          <EditHistoriaClinica
-            historia={currentHistoria}
-            onClose={() => setEditModalOpen(false)}
-            onRefresh={loadHistorias}
-          />
-        </Modal>
-      )}
-
-      {isViewModalOpen && currentHistoria && (
-        <HistoriaClinicaProfile
-          idHistoriaClinica={currentHistoria.idHistoriaClinica}
-          pacienteIdentificacion={currentHistoria.Paciente_identificacion}
-          onClose={() => setViewModalOpen(false)}
+      {/* Título de la página */}
+      <Title level={2} style={{ marginBottom: 24 }}>
+        Lista de Historia Clínica
+      </Title>
+      <Space style={{ marginBottom: 16, display: "flex", justifyContent: "space-between" }}>
+        <Search
+          placeholder="Buscar por paciente"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          style={{ width: 300 }}
         />
-      )}
+        <RangePicker
+          onChange={(dates) =>
+            setDateRange(dates ? [dates[0].startOf("day"), dates[1].endOf("day")] : null)
+          }
+        />
+        <Button type="default" onClick={() => setSortRecent(!sortRecent)}>
+          {sortRecent ? "Ordenar: Antiguos" : "Ordenar: Recientes"}
+        </Button>
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          onClick={() => setIsAddModalOpen(true)}
+        >
+          Agregar Historia Clínica
+        </Button>
+      </Space>
+      <Table
+        columns={columns}
+        dataSource={paginatedData}
+        rowKey="nro_archivo"
+        pagination={{
+          current: currentPage,
+          pageSize: itemsPerPage,
+          total: filteredHistorias.length,
+          onChange: (page) => setCurrentPage(page),
+        }}
+      />
+      <AddHistoriaClinica
+        visible={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onHistoriaAdded={loadHistorias}
+      />
+      <EditHistoriaClinica
+        visible={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        historia={editingHistoria}
+        onHistoriaUpdated={loadHistorias}
+      />
+      <HistoriaClinicaProfile
+        visible={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        historia={viewingHistoria}
+      />
     </div>
   );
-}
+};
 
 export default HistoriaClinica;

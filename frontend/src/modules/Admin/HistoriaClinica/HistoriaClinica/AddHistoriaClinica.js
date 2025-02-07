@@ -1,145 +1,107 @@
 import React, { useState, useEffect } from "react";
-import { Button, Form, Input, AutoComplete, message } from "antd";
-import { SearchOutlined, SaveOutlined, CloseOutlined } from "@ant-design/icons";
-import { createHistoria, fetchPatients, fetchHistorias } from "../../../../utils/api";
+import { Modal, Form, Select, Button, notification } from "antd";
+import { PlusOutlined } from "@ant-design/icons";
+import { fetchPatients, createHistoriaClinica } from "../../../../utils/api";
 
-function AddHistoriaClinica({ onClose, onRefresh }) {
-  const [formData, setFormData] = useState({
-    Paciente_identificacion: "",
-  });
-  const [pacientes, setPacientes] = useState([]);
-  const [filteredPacientes, setFilteredPacientes] = useState([]);
-  const [pacienteExiste, setPacienteExiste] = useState(null);
-  const [ultimoNumeroHistoria, setUltimoNumeroHistoria] = useState(0);
+const { Option } = Select;
 
+const AddHistoriaClinica = ({ visible, onClose, onHistoriaAdded }) => {
+  const [form] = Form.useForm();
+  const [loading, setLoading] = useState(false);
+  const [patients, setPatients] = useState([]);
+  const [filteredPatients, setFilteredPatients] = useState([]);
+
+  // Cargar todos los pacientes al abrir el modal
   useEffect(() => {
-    const loadPacientes = async () => {
+    const loadPatients = async () => {
       try {
         const data = await fetchPatients();
-        setPacientes(data.data || []);
+        setPatients(data);
+        setFilteredPatients(data);
       } catch (error) {
         console.error("Error al cargar pacientes:", error);
+        notification.error({
+          message: "Error",
+          description: "No se pudo cargar la lista de pacientes.",
+        });
       }
     };
 
-    const fetchUltimoNumeroHistoria = async () => {
-      try {
-        const historias = await fetchHistorias();
-        const ultimoNumero = historias?.length > 0
-          ? Math.max(
-              ...historias
-                .map((h) => parseInt(h.nroHistoriaClinica, 10))
-                .filter((num) => !isNaN(num))
-            )
-          : 0;
-        setUltimoNumeroHistoria(ultimoNumero + 1);
-      } catch (error) {
-        console.error("Error al obtener el último número de historia clínica:", error);
-        setUltimoNumeroHistoria(1);
-      }
-    };
-
-    loadPacientes();
-    fetchUltimoNumeroHistoria();
+    loadPatients();
   }, []);
 
-  const formatHistoriaClinicaNumber = (number) => {
-    return number.toString().padStart(6, '0');
-  };
-
-  const handleInputChange = (value) => {
-    setFormData({ ...formData, Paciente_identificacion: value });
-
-    const filtered = pacientes.filter((paciente) =>
-      paciente.identificacion.startsWith(value)
+  // Filtrar pacientes mientras se escribe
+  const handleSearch = (value) => {
+    const filtered = patients.filter(
+      (patient) =>
+        patient.nro_identificacion.includes(value) &&
+        !patients.some((p) => p.nro_identificacion === value)
     );
-    setFilteredPacientes(filtered);
-
-    const existe = pacientes.some(
-      (paciente) => paciente.identificacion === value
-    );
-    setPacienteExiste(existe);
+    setFilteredPatients(filtered);
   };
 
   const handleSubmit = async (values) => {
-    if (!formData.Paciente_identificacion) {
-      message.error("Por favor, completa la identificación del paciente.");
-      return;
-    }
-
-    if (pacienteExiste === false) {
-      message.error("El paciente no existe. Por favor, créalo primero.");
-      return;
-    }
-
-    const dataToSend = {
-      ...values,
-      nroHistoriaClinica: formatHistoriaClinicaNumber(ultimoNumeroHistoria),
-    };
-
+    setLoading(true);
     try {
-      await createHistoria(dataToSend);
-      message.success("Historia Clínica Agregada");
-      onRefresh();
+      await createHistoriaClinica(values);
+      notification.success({
+        message: "Historia clínica agregada",
+        description: "La historia clínica se ha creado exitosamente.",
+      });
+      onHistoriaAdded(); // Actualiza la lista en el componente principal
+      form.resetFields();
       onClose();
     } catch (error) {
-      console.error("Error al crear historia clínica:", error);
-      message.error(error.response?.data?.message || "Error al crear historia clínica.");
+      console.error("Error al agregar historia clínica:", error);
+      notification.error({
+        message: "Error",
+        description: "No se pudo agregar la historia clínica.",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div style={{ padding: 20 }}>
-      <Form onFinish={handleSubmit} layout="vertical">
+    <Modal
+      title="Agregar Historia Clínica"
+      visible={visible}
+      onCancel={onClose}
+      footer={null}
+    >
+      <Form form={form} layout="vertical" onFinish={handleSubmit}>
         <Form.Item
+          name="nro_identificacion"
           label="Identificación del Paciente"
-          name="Paciente_identificacion"
-          initialValue={formData.Paciente_identificacion}
-          rules={[{ required: true, message: "Por favor, ingrese la identificación del paciente." }]}
+          rules={[{ required: true, message: "Este campo es obligatorio." }]}
         >
-          <AutoComplete
-            options={filteredPacientes.map((paciente) => ({
-              value: paciente.identificacion,
-              label: (
-                <div>
-                  <strong>{paciente.identificacion}</strong> - {paciente.primerNombre} {paciente.apellidoMaterno}
-                </div>
-              ),
-            }))}
-            onSearch={handleInputChange}
-            placeholder="Buscar identificación del paciente"
-            allowClear
-            suffixIcon={<SearchOutlined />}
-          />
+          <Select
+            showSearch
+            placeholder="Buscar pacientes"
+            onSearch={handleSearch}
+            filterOption={false}
+          >
+            {filteredPatients.map((patient) => (
+              <Option key={patient.nro_identificacion} value={patient.nro_identificacion}>
+                {`${patient.nro_identificacion} - ${patient.primer_nombre} ${patient.primer_apellido}`}
+              </Option>
+            ))}
+          </Select>
         </Form.Item>
-
-        {pacienteExiste === true && (
-          <p style={{ color: "green" }}>Paciente encontrado.</p>
-        )}
-        {pacienteExiste === false && (
-          <p style={{ color: "red" }}>Paciente no encontrado.</p>
-        )}
-
-        <div className="form-buttons">
+        <Form.Item>
           <Button
             type="primary"
             htmlType="submit"
-            icon={<SaveOutlined />}
-            style={{ marginRight: 10 }}
+            loading={loading}
+            icon={<PlusOutlined />}
+            block
           >
-            Guardar
+            Crear Historia Clínica
           </Button>
-          <Button
-            type="default"
-            onClick={onClose}
-            icon={<CloseOutlined />}
-          >
-            Cancelar
-          </Button>
-        </div>
+        </Form.Item>
       </Form>
-    </div>
+    </Modal>
   );
-}
+};
 
 export default AddHistoriaClinica;

@@ -1,119 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import Table from '../../../../../components/common/Table';
-import Button from '../../../../../components/common/Button';
-import SearchBar from '../../../../../components/common/SearchBar';
-import AddFirmaForm from './AddFirmaForm';
-import EditFirmaForm from './EditFirmaForm';
-import { fetchFirmas, deleteFirma } from '../../../../../utils/api';
-import { FaEdit, FaTrash } from 'react-icons/fa';
+import React, { useState, useEffect } from "react";
+import { Table, Button, Input, Space, Popconfirm, notification, Typography } from "antd";
+import { EditOutlined, DeleteOutlined, EyeOutlined, PlusOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
+import { fetchFirmaElectronica, fetchUsersWithInfo, deleteFirmaElectronica } from "../../../../../utils/api";
+import AddFirmaForm from "./AddFirmaForm";
+import EditFirmaForm from "./EditFirmaForm";
+import FirmaProfileModal from "./FirmaProfileModal";
+
+const { Search } = Input;
+
+const { Title } = Typography;
 
 const FirmaElectronica = () => {
-  const [firmas, setFirmas] = useState([]);
-  const [filteredFirmas, setFilteredFirmas] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [currentFirma, setCurrentFirma] = useState(null);
+    const [firmas, setFirmas] = useState([]);
+    const [users, setUsers] = useState([]);
+    const [searchValue, setSearchValue] = useState("");
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+    const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+    const [selectedFirma, setSelectedFirma] = useState(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 7;
 
-  useEffect(() => {
-    const cargarFirmas = async () => {
-      const data = await fetchFirmas();
-      setFirmas(data);
-      setFilteredFirmas(data);
+    useEffect(() => {
+        loadFirmas();
+        loadUsers();
+    }, []);
+
+    const loadFirmas = async () => {
+        try {
+            const data = await fetchFirmaElectronica();
+            setFirmas(data || []);
+        } catch (error) {
+            notification.error({
+                message: "Error",
+                description: "No se pudo cargar la lista de firmas electrónicas.",
+            });
+        }
     };
-    cargarFirmas();
-  }, []);
 
-  const handleSearch = (term) => {
-    setSearchTerm(term);
-    if (term.trim() === '') {
-      setFilteredFirmas(firmas);
-    } else {
-      const filtered = firmas.filter((firma) =>
-        firma.nombreCertificado.toLowerCase().includes(term.toLowerCase())
-      );
-      setFilteredFirmas(filtered);
-    }
-  };
+    const loadUsers = async () => {
+        try {
+            const data = await fetchUsersWithInfo();
+            const filteredUsers = data.filter(user => user.cedula && user.cedula.trim() !== "");
+            setUsers(filteredUsers);
+        } catch (error) {
+            notification.error({
+                message: "Error",
+                description: "No se pudo cargar la lista de usuarios.",
+            });
+        }
+    };
 
-  const handleAdd = () => {
-    setIsAddModalOpen(true);
-  };
+    const handleDelete = async (idFirma) => {
+        try {
+            await deleteFirmaElectronica(idFirma);
+            notification.success({ message: "Firma eliminada correctamente." });
+            loadFirmas();
+        } catch (error) {
+            notification.error({ message: "Error al eliminar la firma." });
+        }
+    };
 
-  const handleEdit = (firma) => {
-    setCurrentFirma(firma);
-    setIsEditModalOpen(true);
-  };
+    const handleEditClick = (firma) => {
+        setSelectedFirma(firma);
+        setIsEditModalOpen(true);
+    };
 
-  const handleDelete = async (id, usuarioIdentificacion) => {
-    if (window.confirm('¿Estás seguro de eliminar esta firma?')) {
-      try {
-        await deleteFirma(id, usuarioIdentificacion);
-        alert('Firma eliminada con éxito.');
-        const data = await fetchFirmas();
-        setFirmas(data);
-        setFilteredFirmas(data);
-      } catch (error) {
-        console.error('Error al eliminar la firma:', error);
-        alert('Hubo un error al eliminar la firma.');
-      }
-    }
-  };
+    const handleViewClick = (firma) => {
+        setSelectedFirma(firma);
+        setIsProfileModalOpen(true);
+    };
 
-  const closeModal = () => {
-    setIsAddModalOpen(false);
-    setIsEditModalOpen(false);
-    setCurrentFirma(null);
-    fetchFirmas().then((data) => {
-      setFirmas(data);
-      setFilteredFirmas(data);
+    const filteredFirmas = firmas.filter((firma) => {
+        const usuario = users.find(user => user.id_usuario === firma.id_usuario);
+        return usuario?.cedula?.includes(searchValue);
     });
-  };
 
-  const columns = [
-    { label: 'ID', accessor: 'idFirmaElectronica' },
-    { label: 'Nombre', accessor: 'nombreCertificado' },
-    { label: 'Serial', accessor: 'serialNumber' },
-    { label: 'Válido Desde', accessor: 'validoDesde' },
-    { label: 'Válido Hasta', accessor: 'validoHasta' },
-    {
-      label: 'Acciones',
-      accessor: 'acciones',
-      render: (firma) => (
-        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-          <FaEdit
-            onClick={() => handleEdit(firma)}
-            title="Editar firma"
-            style={{ cursor: 'pointer', color: '#ffc107' }}
-          />
-          <FaTrash
-            onClick={() => handleDelete(firma.idFirmaElectronica, firma.Usuario_identificacion)}
-            title="Eliminar firma"
-            style={{ cursor: 'pointer', color: '#dc3545' }}
-          />
+    const handlePageChange = (page) => setCurrentPage(page);
+
+    const columns = [
+        {
+            title: "Usuario",
+            dataIndex: "id_usuario",
+            key: "id_usuario",
+            render: (id_usuario) => {
+                const usuario = users.find(user => user.id_usuario === id_usuario);
+                return usuario ? `${usuario.nombres} ${usuario.apellidos} (${usuario.cedula})` : "Desconocido";
+            },
+        },
+        {
+            title: "Fecha de Creación",
+            dataIndex: "fecha_creacion",
+            key: "fecha_creacion",
+            render: (text) => (text ? dayjs(text).format("YYYY-MM-DD HH:mm:ss") : "N/A"),
+        },
+        {
+            title: "Acciones",
+            key: "acciones",
+            render: (_, firma) => (
+                <Space size="middle">
+                    <Button icon={<EyeOutlined />} onClick={() => handleViewClick(firma)} />
+                    <Button icon={<EditOutlined />} onClick={() => handleEditClick(firma)} />
+                    <Popconfirm
+                        title="¿Eliminar esta firma?"
+                        onConfirm={() => handleDelete(firma.id_firma_electronica)}
+                    >
+                        <Button icon={<DeleteOutlined />} danger />
+                    </Popconfirm>
+                </Space>
+            ),
+        },
+    ];
+
+    return (
+        <div>
+            <Title level={2} style={{ marginBottom: 24 }}>Lista de Firmas Electrónicas</Title>
+            <Space style={{ marginBottom: 20, display: "flex", justifyContent: "space-between", width: "100%" }}>
+                <Search
+                    placeholder="Buscar por cédula"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    style={{ width: 300 }}
+                />
+                <Button type="primary" icon={<PlusOutlined />} onClick={() => setIsAddModalOpen(true)}>
+                    Agregar Firma
+                </Button>
+            </Space>
+
+            <Table
+                columns={columns}
+                dataSource={filteredFirmas.slice(
+                    (currentPage - 1) * itemsPerPage,
+                    currentPage * itemsPerPage
+                )}
+                rowKey="id_firma_electronica"
+                pagination={{
+                    current: currentPage,
+                    pageSize: itemsPerPage,
+                    total: filteredFirmas.length,
+                    onChange: handlePageChange,
+                }}
+            />
+
+            <AddFirmaForm visible={isAddModalOpen} onClose={() => setIsAddModalOpen(false)} onFirmaAdded={loadFirmas} />
+            <EditFirmaForm visible={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} firma={selectedFirma} onFirmaUpdated={loadFirmas} />
+            <FirmaProfileModal visible={isProfileModalOpen} onClose={() => setIsProfileModalOpen(false)} firma={selectedFirma} />
         </div>
-      ),
-    },
-  ];
-
-  return (
-    <div>
-      <div className="actions-row">
-        <h2>Gestión de Firma Electronica</h2>
-        <SearchBar
-          placeholder="Buscar por nombre de certificado"
-          value={searchTerm}
-          onChange={handleSearch}
-        />
-        <Button label="Agregar Firma" onClick={handleAdd} />
-      </div>
-      <Table columns={columns} data={filteredFirmas} />
-      {isAddModalOpen && <AddFirmaForm onClose={closeModal} onAdd={closeModal} />}
-      {isEditModalOpen && currentFirma && (
-        <EditFirmaForm onClose={closeModal} onUpdate={closeModal} initialData={currentFirma} />
-      )}
-    </div>
-  );
+    );
 };
 
 export default FirmaElectronica;

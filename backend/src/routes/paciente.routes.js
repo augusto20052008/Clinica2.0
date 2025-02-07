@@ -1,21 +1,22 @@
-const { Router } = require('express');
-const { getPacientes, getPaciente, postPaciente, putPaciente, deletePacienteById, } = require('../controllers/paciente.controller');
+const express = require('express');
+const router = express.Router();
 
-const router = Router();
+const pacienteController = require('../controllers/paciente.controller');
+const authMiddleware = require('../middleware/auth.middleware');
 
-// GET /paciente -> Lista todos
-router.get('/', getPacientes);
+// GET: Obtener todos los pacientes
+router.get('/', authMiddleware, pacienteController.obtenerPacientes);
 
-// GET /paciente/:identificacion -> Obtener uno
-router.get('/:identificacion', getPaciente);
+// GET: Obtener un paciente por nro_identificacion
+router.get('/:nro_identificacion', authMiddleware, pacienteController.obtenerPacientePorId);
 
-// POST /paciente -> Crear nuevo
-router.post('/', postPaciente);
+// POST: Crear un nuevo paciente
+router.post('/', authMiddleware, pacienteController.crearPaciente);
 
-// PUT /paciente/:identificacion -> Actualizar
-router.put('/:identificacion', putPaciente);
+// PUT: Actualizar un paciente existente
+router.put('/:nro_identificacion', authMiddleware, pacienteController.actualizarPaciente);
 
-// DELETE /paciente/:identificacion -> Eliminar
-router.delete('/:identificacion', deletePacienteById);
+// DELETE: Eliminar un paciente
+router.delete('/:nro_identificacion', authMiddleware, pacienteController.eliminarPaciente);
 
 module.exports = router;

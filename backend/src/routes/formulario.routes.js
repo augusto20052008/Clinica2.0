@@ -1,21 +1,21 @@
-const { Router } = require('express');
-const {getFormularios,getFormulario,postFormulario,putFormulario,deleteFormularioById,} = require('../controllers/formulario.controller');
+const express = require('express');
+const router = express.Router();
+const formularioController = require('../controllers/formulario.controller');
+const authMiddleware = require('../middleware/auth.middleware');
 
-const router = Router();
+// Obtener todos los formularios
+router.get('/', authMiddleware, formularioController.obtenerFormularios);
 
-// GET /formulario/ -> Obtiene todos los formularios
-router.get('/', getFormularios);
+// Obtener un formulario por su ID
+router.get('/:id', authMiddleware, formularioController.obtenerFormularioPorId);
 
-//GET /formulario/:idHistoriaClinica -> Obtener todos los formularios asociados a una historia clinica
-router.get('/:idHistoriaClinica', getFormulario);
+// Crear un nuevo formulario
+router.post('/', authMiddleware, formularioController.crearFormulario);
 
-// POST /formulario/ -> Crea un nuevo formulario
-router.post('/', postFormulario);
+// Actualizar un formulario existente
+router.put('/:id', authMiddleware, formularioController.actualizarFormulario);
 
-// PUT /formulario/:idFormulario/:idHistoriaClinica/:idPlantilla/:idEstablecimiento
-router.put('/:idFormulario/:idHistoriaClinica/:idPlantilla/:idEstablecimiento', putFormulario);
-
-// DELETE /formulario/:idFormulario/:idHistoriaClinica/:idPlantilla/:idEstablecimiento
-router.delete('/:idFormulario/:idHistoriaClinica/:idPlantilla/:idEstablecimiento', deleteFormularioById);
+// Eliminar un formulario por su ID
+router.delete('/:id', authMiddleware, formularioController.eliminarFormulario);
 
 module.exports = router;

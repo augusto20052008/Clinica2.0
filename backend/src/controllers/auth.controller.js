@@ -1,67 +1,53 @@
+const Usuario = require('../models/auth.model');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 require('dotenv').config();
-const { findByCorreo } = require('../models/usuario.model');
 
-async function login(req, res) {
-  try {
-    const { correo, contraseña } = req.body;
 
-    // Validar entradas
-    if (!correo || !contraseña) {
-      return res.status(400).json({
-        success: false,
-        message: 'Faltan campos: correo y contraseña',
-      });
+exports.iniciarSesion = async (req, res) => {
+    try {
+        const { correo, contraseña } = req.body;
+
+        if (!correo || !contraseña) {
+            return res.status(400).json({ mensaje: 'Por favor, ingresa tu email y contraseña.' });
+        }
+
+        // Buscar usuario por correo
+        const usuario = await Usuario.findByEmail(correo);
+
+        if (!usuario) {
+            return res.status(401).json({ mensaje: 'Correo o contraseña incorrectos.' });
+        }
+
+        // Verificar contraseña
+        const esValido = await bcrypt.compare(contraseña, usuario.contraseña);
+
+        if (!esValido) {
+            return res.status(401).json({ mensaje: 'Correo o contraseña incorrectos.' });
+        }
+
+        // Obtener rol del usuario
+        const rol = usuario.rol;
+
+        if (!rol) {
+            return res.status(400).json({ mensaje: 'No se encontró un rol asignado para el usuario.' });
+        }
+
+        // Generar token JWT
+        const token = jwt.sign(
+            { id: usuario.id_usuario, rol },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_EXPIRES_IN || '1h' }
+        );
+
+        res.status(200).json({ mensaje: 'Inicio de sesión exitoso.', token });
+    } catch (error) {
+        console.error("Error en el servidor:", error);
+        res.status(500).json({ mensaje: 'Error interno del servidor.' });
     }
-
-    // Buscar en DB
-    const usuario = await findByCorreo(correo);
-    if (!usuario) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario no encontrado',
-      });
-    }
-    // Comparacion de contraseña
-    if (usuario.contraseña !== contraseña) {
-      return res.status(401).json({
-        success: false,
-        message: 'Contraseña incorrecta',
-      });
-    }
-
-    // Generar Payload
-    const payload = {
-      identificacion: usuario.identificacion,
-      rol: usuario.rol,
-    };
-
-    //Generar JWT con su payload
-    const token = jwt.sign(payload, process.env.JWT_SECRET, {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    });
-
-    // Respuesta
-    return res.json({
-      success: true,
-      message: 'Login exitoso',
-      token,
-      data: {
-        identificacion: usuario.identificacion,
-        nombres: usuario.nombres,
-        apellidos: usuario.apellidos,
-        rol: usuario.rol,
-      },
-    });
-  } catch (error) {
-    console.error('Error en login:', error);
-    return res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-    });
-  }
-}
-
-module.exports = {
-  login
 };
+
+
+
+
+
